@@ -17,7 +17,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version-file: pubspec.yaml
+          flutter-version: '3.22.1'
 
       - name: Enable Web
         run: flutter config --enable-web
@@ -26,7 +26,7 @@ jobs:
         run: flutter pub get
 
       - name: Build Web
-        run: flutter build web
+        run: flutter build web --release
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
