@@ -5,6 +5,7 @@ import 'package:qiot_admin/data/top_menu_data.dart';
 import 'package:qiot_admin/screens/notifications_screen.dart';
 import 'package:qiot_admin/screens/user_list_screen.dart';
 import 'package:qiot_admin/services/api/authentication.dart';
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 class DashboardScreen extends StatefulWidget {
   final FluroRouter router;
@@ -117,6 +118,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                 ), // Right Container
+                // Right Container
                 Container(
                   width: screenSize.width * 0.16,
                   height: screenSize.height,
@@ -149,7 +151,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 color: Color(0xFF004283),
                               ),
                             ),
-                            Container(
+                            SizedBox(
                               width: screenSize.width * 0.1,
                               height: screenSize.height * 0.1,
                               child: SvgPicture.asset(
@@ -176,6 +178,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               ),
                             )
                           ],
+                        ),
+                      ),
+                      Container(
+                        width: screenSize.width * 0.16,
+                        height: screenSize.height * 0.4,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8.0, vertical: 4.0),
+                        margin: const EdgeInsets.all(16.0),
+                        child: SfPdfViewer.network(
+                          'https://storage.googleapis.com/qiot-test.appspot.com/AsthmaActionPlanUrls/66689c0a20474d104de2f3d7/1718138934575_asthma_action_plan.pdf',
                         ),
                       ),
                     ],
