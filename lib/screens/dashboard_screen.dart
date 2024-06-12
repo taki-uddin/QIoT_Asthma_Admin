@@ -1,11 +1,16 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:pdfx/pdfx.dart';
 import 'package:qiot_admin/data/top_menu_data.dart';
 import 'package:qiot_admin/screens/notifications_screen.dart';
 import 'package:qiot_admin/screens/user_list_screen.dart';
 import 'package:qiot_admin/services/api/authentication.dart';
-import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
+import 'package:http/http.dart' as http;
+import 'dart:html' as html;
+
+import 'package:qiot_admin/services/api/dashboard_users_data.dart';
 
 class DashboardScreen extends StatefulWidget {
   final FluroRouter router;
@@ -17,8 +22,65 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedIndex = 0;
-
   final data = TopMenuData();
+  html.File? _selectedFile;
+  String pdfUrl = '';
+  late PdfControllerPinch pdfPinchController;
+
+  @override
+  void initState() {
+    super.initState();
+    getpdfUrl();
+  }
+
+  Future<void> getpdfUrl() async {
+    final Map<String, dynamic>? pdfUrlData =
+        await DashboardUsersData().getEducationalPlan();
+    if (pdfUrlData != null) {
+      setState(() {
+        pdfUrl = pdfUrlData['educationalPlans'];
+      });
+      pdfPinchController = PdfControllerPinch(
+        document: PdfDocument.openData(http.readBytes(Uri.parse(pdfUrl))),
+      );
+      print('pdfUrlData: $pdfUrl');
+    } else {
+      print('Failed to get pdf url');
+    }
+  }
+
+  Future<void> uploadEP() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
+    );
+
+    if (result != null) {
+      PlatformFile file = result.files.single;
+
+      // Read the file bytes asynchronously
+      List<int> bytes = file.bytes!.toList();
+
+      setState(() {
+        _selectedFile = html.File(bytes, file.name); // For web
+      });
+
+      try {
+        final Map<String, dynamic>? uploadUserAAP =
+            await DashboardUsersData().uploadEducationalPlan(_selectedFile!);
+        if (uploadUserAAP != null) {
+          print('Your Asthma Action Plan has been uploaded!');
+        } else {
+          print('Failed to upload Asthma Action Plan');
+        }
+      } catch (e) {
+        print('Error: $e');
+      }
+    } else {
+      print('No file selected');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final Size screenSize = MediaQuery.of(context).size;
@@ -161,7 +223,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               ),
                             ),
                             ElevatedButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                uploadEP();
+                              },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF004283),
                                 shape: RoundedRectangleBorder(
@@ -186,8 +250,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8.0, vertical: 4.0),
                         margin: const EdgeInsets.all(16.0),
-                        child: SfPdfViewer.network(
-                          'https://storage.googleapis.com/qiot-test.appspot.com/AsthmaActionPlanUrls/66689c0a20474d104de2f3d7/1718138934575_asthma_action_plan.pdf',
+                        child: PdfViewPinch(
+                          controller: pdfPinchController,
                         ),
                       ),
                     ],
