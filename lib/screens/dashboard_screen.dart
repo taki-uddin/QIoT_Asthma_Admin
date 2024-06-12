@@ -1,6 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:pdfx/pdfx.dart';
 import 'package:qiot_admin/data/top_menu_data.dart';
@@ -25,7 +26,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final data = TopMenuData();
   html.File? _selectedFile;
   String pdfUrl = '';
-  late PdfControllerPinch pdfPinchController;
+  PdfControllerPinch? pdfPinchController;
 
   @override
   void initState() {
@@ -40,12 +41,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
       setState(() {
         pdfUrl = pdfUrlData['educationalPlans'];
       });
-      pdfPinchController = PdfControllerPinch(
-        document: PdfDocument.openData(http.readBytes(Uri.parse(pdfUrl))),
-      );
+      // Load PDF document once url is fetched
+      await loadPdfDocument();
       print('pdfUrlData: $pdfUrl');
     } else {
       print('Failed to get pdf url');
+    }
+  }
+
+  Future<void> loadPdfDocument() async {
+    // Fetch PDF bytes asynchronously
+    final Uint8List bytes = await fetchPdfBytes(pdfUrl);
+    // Initialize PdfControllerPinch with document
+    pdfPinchController = PdfControllerPinch(
+      document: PdfDocument.openData(bytes),
+    );
+    // Update UI
+    setState(() {});
+  }
+
+  Future<Uint8List> fetchPdfBytes(String pdfUrl) async {
+    final response = await http.get(Uri.parse(pdfUrl));
+    if (response.statusCode == 200) {
+      return response.bodyBytes;
+    } else {
+      throw Exception('Failed to load PDF: ${response.statusCode}');
     }
   }
 
@@ -105,64 +125,70 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          SvgPicture.asset(
-                            'assets/svg/logo.svg',
-                            width: screenSize.width * 0.1,
-                          ),
-                          const Divider(
-                            indent: 16,
-                            endIndent: 16,
-                          ),
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8.0,
-                                  vertical: 4.0,
+                      Expanded(
+                        flex: 10,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            SvgPicture.asset(
+                              'assets/svg/logo.svg',
+                              width: screenSize.width * 0.1,
+                            ),
+                            const Divider(
+                              indent: 16,
+                              endIndent: 16,
+                            ),
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8.0,
+                                    vertical: 4.0,
+                                  ),
+                                  height: screenSize.height * 0.6,
+                                  child: ListView.builder(
+                                    itemCount: data.menu.length,
+                                    itemBuilder: (context, index) =>
+                                        _buildMenu(data, index),
+                                  ),
                                 ),
-                                height: screenSize.height * 0.6,
-                                child: ListView.builder(
-                                  itemCount: data.menu.length,
-                                  itemBuilder: (context, index) =>
-                                      _buildMenu(data, index),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const Divider(
-                            indent: 16,
-                            endIndent: 16,
-                          ),
-                          ListTile(
-                            onTap: () async {
-                              Map<String, dynamic> signOutResult =
-                                  await Authentication.signOut();
-                              bool signOutSuccess =
-                                  signOutResult['success'] ?? false;
-                              String? errorMessage = signOutResult['error'];
-                              if (signOutSuccess) {
-                                Navigator.popAndPushNamed(context, '/');
-                              } else {
-                                // Authentication failed
-                                print('Authentication failed: $errorMessage');
-                              }
-                            },
-                            leading: const Icon(Icons.logout),
-                            title: const Text('Logout'),
-                          ),
-                        ],
+                      Expanded(
+                        flex: 2,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Divider(
+                              indent: 16,
+                              endIndent: 16,
+                            ),
+                            ListTile(
+                              onTap: () async {
+                                Map<String, dynamic> signOutResult =
+                                    await Authentication.signOut();
+                                bool signOutSuccess =
+                                    signOutResult['success'] ?? false;
+                                String? errorMessage = signOutResult['error'];
+                                if (signOutSuccess) {
+                                  Navigator.pop(context, '/');
+                                } else {
+                                  // Authentication failed
+                                  print('Authentication failed: $errorMessage');
+                                }
+                              },
+                              leading: const Icon(Icons.logout),
+                              title: const Text('Logout'),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -250,9 +276,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8.0, vertical: 4.0),
                         margin: const EdgeInsets.all(16.0),
-                        child: PdfViewPinch(
-                          controller: pdfPinchController,
-                        ),
+                        child: pdfPinchController != null
+                            ? PdfViewPinch(
+                                controller: pdfPinchController!,
+                              )
+                            : const SizedBox(),
                       ),
                     ],
                   ),

@@ -46,7 +46,7 @@ class _SigninScreenState extends State<SigninScreen> {
       if (signInSuccess) {
         SessionStorageHelpers.setStorage('loginState', 'true');
         SessionStorageHelpers.setStorage('token', responseData?['token']);
-        Navigator.pushNamed(context, '/dashboard');
+        Navigator.popAndPushNamed(context, '/dashboard');
       } else {
         // Authentication failed
         print('Authentication failed: $errorMessage');

@@ -4,7 +4,7 @@ import 'dart:html' as html;
 import 'package:qiot_admin/helpers/session_storage_helpers.dart';
 
 class DashboardUsersData {
-  static Future<Map<String, dynamic>?> getAllUsersData() async {
+  static Future<dynamic> getAllUsersData() async {
     var headers = {
       // 'Content-Type': 'application/json',
       'Authorization':
@@ -31,7 +31,7 @@ class DashboardUsersData {
         }
       } else {
         print("error: ${response.reasonPhrase}");
-        return null;
+        return response.reasonPhrase;
       }
     } catch (e) {
       print('error: Failed to make HTTP request: $e');

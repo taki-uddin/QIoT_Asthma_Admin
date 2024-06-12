@@ -61,16 +61,18 @@ class _UserListScreenState extends State<UserListScreen> {
     DashboardUsersData.getAllUsersData().then(
       (value) async {
         if (value != null) {
-          setState(() {
-            userData = value['payload'];
-            filteredUserData =
-                List.from(userData); // Initialize filteredUserData
-            // Initialize the _rowEnabled list based on the status field
-            _rowEnabled = userData.map<bool>((user) {
-              // Assuming 'Enable' means enabled and others mean disabled
-              return user['status'] == 'Enable';
-            }).toList();
-          });
+          value != 'Forbidden'
+              ? setState(() {
+                  userData = value['payload'];
+                  filteredUserData =
+                      List.from(userData); // Initialize filteredUserData
+                  // Initialize the _rowEnabled list based on the status field
+                  _rowEnabled = userData.map<bool>((user) {
+                    // Assuming 'Enable' means enabled and others mean disabled
+                    return user['status'] == 'Enable';
+                  }).toList();
+                })
+              : Navigator.pop(context, '/');
         } else {
           print('Failed to get user data');
         }
