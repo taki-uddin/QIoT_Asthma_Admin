@@ -2,9 +2,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dart:html' as html;
 import 'package:qiot_admin/helpers/session_storage_helpers.dart';
+import 'package:qiot_admin/services/api/authentication.dart';
 
 class DashboardUsersData {
-  static Future<dynamic> getAllUsersData() async {
+  static Future<Map<String, dynamic>?> getAllUsersData() async {
     var headers = {
       // 'Content-Type': 'application/json',
       'Authorization':
@@ -31,7 +32,8 @@ class DashboardUsersData {
         }
       } else {
         print("error: ${response.reasonPhrase}");
-        return response.reasonPhrase;
+        Authentication.signOut();
+        return null;
       }
     } catch (e) {
       print('error: Failed to make HTTP request: $e');
@@ -210,6 +212,7 @@ class DashboardUsersData {
         }
       } else {
         print("error: ${response.reasonPhrase}");
+        Authentication.signOut();
         return null;
       }
     } catch (e) {
