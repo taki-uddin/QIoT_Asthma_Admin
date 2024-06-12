@@ -17,6 +17,7 @@ class _UserListScreenState extends State<UserListScreen> {
   List<bool> _rowEnabled = [];
   html.File? _selectedFile;
   int _hoverIndex = -1;
+  // ignore: unused_field
   String _searchQuery = '';
 
   @override
