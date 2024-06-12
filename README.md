@@ -1,1 +1,3 @@
 # QIoT_Asthma_Admin
+
+(https://github.com/taki-uddin/QIoT_Asthma_Admin/actions/workflows/gh-pages.yaml/badge.svg?event=push)
