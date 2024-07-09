@@ -63,13 +63,14 @@ class _UserListScreenState extends State<UserListScreen> {
       (value) async {
         if (value != null) {
           setState(() {
-            userData = value['payload'];
+            userData = List.from(
+                value['payload'].reversed); // Reverse the order of userData
             filteredUserData =
                 List.from(userData); // Initialize filteredUserData
             // Initialize the _rowEnabled list based on the status field
             _rowEnabled = userData.map<bool>((user) {
               // Assuming 'Enable' means enabled and others mean disabled
-              return user['status'] == 'Enable';
+              return user['status'] == 'Enabled';
             }).toList();
           });
         } else {
@@ -145,6 +146,110 @@ class _UserListScreenState extends State<UserListScreen> {
                   ),
                 ],
               ),
+              // Table Header
+              Container(
+                width: screenSize.width,
+                // height: screenSize.height * 0.16,
+                height: 32,
+                margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF004283).withOpacity(0.05),
+                      spreadRadius: 1,
+                      blurRadius: 3,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Inhaler Serial Number
+                    Expanded(
+                      flex: 4,
+                      child: Text(
+                        "Inhaler Serial Number",
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xFF004283),
+                          fontSize: 14,
+                          fontWeight: FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                    // Peakflow Baseline
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        "Peakflow Baseline",
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xFF004283),
+                          fontSize: 14,
+                          fontWeight: FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                    // Personal Plan
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        "Personal Plan",
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xFF004283),
+                          fontSize: 14,
+                          fontWeight: FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                    // Edit
+                    Expanded(
+                      flex: 1,
+                      child: Text(
+                        "Edit",
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xFF004283),
+                          fontSize: 14,
+                          fontWeight: FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                    // Delete
+                    Expanded(
+                      flex: 1,
+                      child: Text(
+                        "Delete",
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xFF004283),
+                          fontSize: 14,
+                          fontWeight: FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                    // Enable/Disable
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        "Enable/Disable",
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xFF004283),
+                          fontSize: 14,
+                          fontWeight: FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               Expanded(
                 child: ListView.builder(
                   itemCount: filteredUserData.length,
@@ -199,8 +304,9 @@ class _UserListScreenState extends State<UserListScreen> {
                                 flex: 4,
                                 child: Text(
                                   filteredUserData[index]['inhaler'],
-                                  textAlign: TextAlign.left,
+                                  textAlign: TextAlign.center,
                                   style: const TextStyle(
+                                    color: Color(0xFF004283),
                                     fontSize: 14,
                                     fontWeight: FontWeight.normal,
                                   ),

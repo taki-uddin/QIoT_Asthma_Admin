@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:pdfx/pdfx.dart';
 import 'package:qiot_admin/data/top_menu_data.dart';
+import 'package:qiot_admin/helpers/session_storage_helpers.dart';
+import 'package:qiot_admin/screens/add_users_screen.dart';
 import 'package:qiot_admin/screens/notifications_screen.dart';
 import 'package:qiot_admin/screens/user_list_screen.dart';
 import 'package:qiot_admin/services/api/authentication.dart';
@@ -104,6 +106,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final Size screenSize = MediaQuery.of(context).size;
+    print("Access Token: ${SessionStorageHelpers.getStorage('accessToken')}");
 
     return SafeArea(
       child: Scaffold(
@@ -351,6 +354,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return const UserListScreen();
       case 1:
         return const NotificationsScreen();
+      case 2:
+        return const AddUsersScreen();
     }
     return const UserListScreen();
   }

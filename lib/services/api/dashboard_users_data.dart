@@ -9,7 +9,7 @@ class DashboardUsersData {
     var headers = {
       // 'Content-Type': 'application/json',
       'Authorization':
-          'Bearer ${await SessionStorageHelpers.getStorage('token')}',
+          'Bearer ${await SessionStorageHelpers.getStorage('accessToken')}',
     };
 
     var request = http.Request(
@@ -45,7 +45,7 @@ class DashboardUsersData {
     var headers = {
       // 'Content-Type': 'application/json',
       'Authorization':
-          'Bearer ${await SessionStorageHelpers.getStorage('token')}',
+          'Bearer ${await SessionStorageHelpers.getStorage('accessToken')}',
     };
 
     var request = http.Request(
@@ -83,7 +83,7 @@ class DashboardUsersData {
     var headers = {
       // 'Content-Type': 'application/json',
       'Authorization':
-          'Bearer ${await SessionStorageHelpers.getStorage('token')}',
+          'Bearer ${await SessionStorageHelpers.getStorage('accessToken')}',
     };
 
     var request = http.MultipartRequest(
@@ -137,7 +137,7 @@ class DashboardUsersData {
     var headers = {
       // 'Content-Type': 'application/json',
       'Authorization':
-          'Bearer ${await SessionStorageHelpers.getStorage('token')}',
+          'Bearer ${await SessionStorageHelpers.getStorage('accessToken')}',
     };
 
     var request = http.MultipartRequest(
@@ -189,7 +189,7 @@ class DashboardUsersData {
     var headers = {
       // 'Content-Type': 'application/json',
       'Authorization':
-          'Bearer ${await SessionStorageHelpers.getStorage('token')}',
+          'Bearer ${await SessionStorageHelpers.getStorage('accessToken')}',
     };
 
     var request = http.Request(
