@@ -181,7 +181,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     signOutResult['success'] ?? false;
                                 String? errorMessage = signOutResult['error'];
                                 if (signOutSuccess) {
-                                  Navigator.pop(context, '/');
+                                  Navigator.popAndPushNamed(context, '/');
                                 } else {
                                   // Authentication failed
                                   print('Authentication failed: $errorMessage');

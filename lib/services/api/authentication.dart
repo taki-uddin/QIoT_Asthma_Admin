@@ -41,13 +41,15 @@ class Authentication {
   static Future<Map<String, dynamic>> signOut() async {
     var headers = {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer ${SessionStorageHelpers.getStorage('token')}',
+      'Authorization':
+          'Bearer ${await SessionStorageHelpers.getStorage('accessToken')}',
     };
+    print(await SessionStorageHelpers.getStorage('userID'));
 
     var request = http.Request(
         'DELETE',
         Uri.parse(
-            'https://qiot-beta-f5013130cafe.herokuapp.com/api/v1/auth/signout/6662801b38dccaad04b4aa0b'));
+            'https://qiot-beta-f5013130cafe.herokuapp.com/api/v1/auth/signout/${await SessionStorageHelpers.getStorage('userID')}'));
     request.headers.addAll(headers);
 
     try {

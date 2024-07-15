@@ -47,6 +47,9 @@ class _SigninScreenState extends State<SigninScreen> {
         SessionStorageHelpers.setStorage('loginState', 'true');
         SessionStorageHelpers.setStorage(
             'accessToken', responseData?['accessToken']);
+        print(responseData?['payload'][0]['user']['_id']);
+        SessionStorageHelpers.setStorage(
+            'userID', responseData?['payload'][0]['user']['_id']);
         Navigator.popAndPushNamed(context, '/dashboard');
       } else {
         // Authentication failed
