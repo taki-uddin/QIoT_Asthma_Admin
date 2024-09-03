@@ -25,6 +25,7 @@ class DashboardUsersData {
       if (response.statusCode == 200) {
         if (responseBody.isNotEmpty) {
           Map<String, dynamic>? jsonResponse = json.decode(responseBody);
+          print('jsonResponse: $jsonResponse');
           return jsonResponse;
         } else {
           print('Response body is empty or null');
@@ -52,6 +53,42 @@ class DashboardUsersData {
         'GET',
         Uri.parse(
             'https://qiot-beta-f5013130cafe.herokuapp.com/api/v1/admin/$userId'));
+    request.headers.addAll(headers);
+
+    try {
+      http.StreamedResponse response = await request.send();
+      String responseBody = await response.stream.bytesToString();
+
+      if (response.statusCode == 200) {
+        if (responseBody.isNotEmpty) {
+          Map<String, dynamic>? jsonResponse = json.decode(responseBody);
+          return jsonResponse;
+        } else {
+          print('Response body is empty or null');
+          return null;
+        }
+      } else {
+        print("error: ${response.reasonPhrase}");
+        return null;
+      }
+    } catch (e) {
+      print('error: Failed to make HTTP request: $e');
+      return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>?> getPeakflowhistories(
+      String userId, int month, int year) async {
+    var headers = {
+      // 'Content-Type': 'application/json',
+      'Authorization':
+          'Bearer ${await SessionStorageHelpers.getStorage('accessToken')}',
+    };
+
+    var request = http.Request(
+        'GET',
+        Uri.parse(
+            'https://qiot-beta-f5013130cafe.herokuapp.com/api/v1/admin/peakflowhistories?id=$userId&month=$month&year=$year'));
     request.headers.addAll(headers);
 
     try {

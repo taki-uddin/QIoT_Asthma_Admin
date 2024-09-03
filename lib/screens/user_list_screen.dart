@@ -70,7 +70,7 @@ class _UserListScreenState extends State<UserListScreen> {
             // Initialize the _rowEnabled list based on the status field
             _rowEnabled = userData.map<bool>((user) {
               // Assuming 'Enable' means enabled and others mean disabled
-              return user['status'] == 'Enabled';
+              return user['status'] == 'Enable' || user['status'] == 'Enabled';
             }).toList();
           });
         } else {

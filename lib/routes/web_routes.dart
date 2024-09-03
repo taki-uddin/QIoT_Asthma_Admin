@@ -26,7 +26,12 @@ void defineRoutes(FluroRouter router) {
     '/usersdetails/:id',
     handler: Handler(
       handlerFunc: (context, params) {
-        final String userId = params['id']![0];
+        final String? userId = params['id']?.first;
+        print('userId: $userId');
+        if (userId == null) {
+          // Handle the case where userId is null
+          return const SigninScreen(); // or any other fallback screen
+        }
         return UserDetails(
           userId: userId,
         );
