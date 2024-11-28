@@ -1,6 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:qiot_admin/main.dart';
 import 'package:qiot_admin/services/api/dashboard_users_data.dart';
 import 'dart:html' as html;
 
@@ -46,15 +47,15 @@ class _UserListScreenState extends State<UserListScreen> {
         final Map<String, dynamic>? uploadUserAAP = await DashboardUsersData()
             .uploadUsersAsthmaActionPlan(_selectedFile!, userId);
         if (uploadUserAAP != null) {
-          print('Your Asthma Action Plan has been uploaded!');
+          logger.d('Your Asthma Action Plan has been uploaded!');
         } else {
-          print('Failed to upload Asthma Action Plan');
+          logger.d('Failed to upload Asthma Action Plan');
         }
       } catch (e) {
-        print('Error: $e');
+        logger.d('Error: $e');
       }
     } else {
-      print('No file selected');
+      logger.d('No file selected');
     }
   }
 
@@ -74,7 +75,7 @@ class _UserListScreenState extends State<UserListScreen> {
             }).toList();
           });
         } else {
-          print('Failed to get user data');
+          logger.d('Failed to get user data');
         }
       },
     );

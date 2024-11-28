@@ -6,6 +6,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:pdfx/pdfx.dart';
 import 'package:qiot_admin/data/top_menu_data.dart';
 import 'package:qiot_admin/helpers/session_storage_helpers.dart';
+import 'package:qiot_admin/main.dart';
 import 'package:qiot_admin/screens/add_users_screen.dart';
 import 'package:qiot_admin/screens/notifications_screen.dart';
 import 'package:qiot_admin/screens/user_list_screen.dart';
@@ -45,9 +46,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       });
       // Load PDF document once url is fetched
       await loadPdfDocument();
-      print('pdfUrlData: $pdfUrl');
+      logger.d('pdfUrlData: $pdfUrl');
     } else {
-      print('Failed to get pdf url');
+      logger.d('Failed to get pdf url');
     }
   }
 
@@ -91,22 +92,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
         final Map<String, dynamic>? uploadUserAAP =
             await DashboardUsersData().uploadEducationalPlan(_selectedFile!);
         if (uploadUserAAP != null) {
-          print('Your Asthma Action Plan has been uploaded!');
+          logger.d('Your Asthma Action Plan has been uploaded!');
         } else {
-          print('Failed to upload Asthma Action Plan');
+          logger.d('Failed to upload Asthma Action Plan');
         }
       } catch (e) {
-        print('Error: $e');
+        logger.d('Error: $e');
       }
     } else {
-      print('No file selected');
+      logger.d('No file selected');
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final Size screenSize = MediaQuery.of(context).size;
-    print("Access Token: ${SessionStorageHelpers.getStorage('accessToken')}");
+    logger
+        .d("Access Token: ${SessionStorageHelpers.getStorage('accessToken')}");
 
     return SafeArea(
       child: Scaffold(
@@ -184,7 +186,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   Navigator.popAndPushNamed(context, '/');
                                 } else {
                                   // Authentication failed
-                                  print('Authentication failed: $errorMessage');
+                                  logger.d(
+                                      'Authentication failed: $errorMessage');
                                 }
                               },
                               leading: const Icon(Icons.logout),
@@ -348,7 +351,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget getCustomMenu() {
-    print(_selectedIndex);
+    logger.d(_selectedIndex);
     switch (_selectedIndex) {
       case 0:
         return const UserListScreen();

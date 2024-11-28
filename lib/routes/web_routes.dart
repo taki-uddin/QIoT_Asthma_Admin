@@ -1,7 +1,8 @@
 import 'package:fluro/fluro.dart';
-import 'package:qiot_admin/screens/dashboard_screen.dart';
-import 'package:qiot_admin/screens/signin_screen.dart';
-import 'package:qiot_admin/screens/user_details.dart';
+import 'package:qiot_admin/main.dart';
+import 'package:qiot_admin/screens/dashboard_screen/dashboard_screen.dart';
+import 'package:qiot_admin/screens/authentication_screens/signin_screen.dart';
+import 'package:qiot_admin/screens/user_details/user_details.dart';
 
 void defineRoutes(FluroRouter router) {
   router.define(
@@ -27,7 +28,7 @@ void defineRoutes(FluroRouter router) {
     handler: Handler(
       handlerFunc: (context, params) {
         final String? userId = params['id']?.first;
-        print('userId: $userId');
+        logger.d('userId: $userId');
         if (userId == null) {
           // Handle the case where userId is null
           return const SigninScreen(); // or any other fallback screen

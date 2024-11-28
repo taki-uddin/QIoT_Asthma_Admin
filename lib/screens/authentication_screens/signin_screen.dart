@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:qiot_admin/helpers/session_storage_helpers.dart';
+import 'package:qiot_admin/main.dart';
 import 'package:qiot_admin/services/api/authentication.dart';
 
 class SigninScreen extends StatefulWidget {
@@ -47,16 +48,19 @@ class _SigninScreenState extends State<SigninScreen> {
         SessionStorageHelpers.setStorage('loginState', 'true');
         SessionStorageHelpers.setStorage(
             'accessToken', responseData?['accessToken']);
-        print(responseData?['payload'][0]['user']['_id']);
+
+        SessionStorageHelpers.setStorage(
+            'refreshToken', responseData?['refreshToken']);
+        logger.d(responseData?['payload'][0]['user']['_id']);
         SessionStorageHelpers.setStorage(
             'userID', responseData?['payload'][0]['user']['_id']);
         Navigator.popAndPushNamed(context, '/dashboard');
       } else {
         // Authentication failed
-        print('Authentication failed: $errorMessage');
+        logger.d('Authentication failed: $errorMessage');
       }
     } else {
-      print('Invalid form');
+      logger.d('Invalid form');
     }
   }
 

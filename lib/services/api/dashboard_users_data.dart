@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:qiot_admin/constants/api_constants.dart';
 import 'dart:html' as html;
 import 'package:qiot_admin/helpers/session_storage_helpers.dart';
+import 'package:qiot_admin/main.dart';
 import 'package:qiot_admin/services/api/authentication.dart';
 
 class DashboardUsersData {
@@ -12,10 +14,8 @@ class DashboardUsersData {
           'Bearer ${await SessionStorageHelpers.getStorage('accessToken')}',
     };
 
-    var request = http.Request(
-        'GET',
-        Uri.parse(
-            'https://qiot-beta-f5013130cafe.herokuapp.com/api/v1/admin/'));
+    var request =
+        http.Request('GET', Uri.parse('${ApiConstants.baseURL}/admin/'));
     request.headers.addAll(headers);
 
     try {
@@ -25,19 +25,19 @@ class DashboardUsersData {
       if (response.statusCode == 200) {
         if (responseBody.isNotEmpty) {
           Map<String, dynamic>? jsonResponse = json.decode(responseBody);
-          print('jsonResponse: $jsonResponse');
+          logger.d('jsonResponse: $jsonResponse');
           return jsonResponse;
         } else {
-          print('Response body is empty or null');
+          logger.d('Response body is empty or null');
           return null;
         }
       } else {
-        print("error: ${response.reasonPhrase}");
+        logger.d("error: ${response.reasonPhrase}");
         Authentication.signOut();
         return null;
       }
     } catch (e) {
-      print('error: Failed to make HTTP request: $e');
+      logger.d('error: Failed to make HTTP request: $e');
       return null;
     }
   }
@@ -49,10 +49,8 @@ class DashboardUsersData {
           'Bearer ${await SessionStorageHelpers.getStorage('accessToken')}',
     };
 
-    var request = http.Request(
-        'GET',
-        Uri.parse(
-            'https://qiot-beta-f5013130cafe.herokuapp.com/api/v1/admin/$userId'));
+    var request =
+        http.Request('GET', Uri.parse('${ApiConstants.baseURL}/admin/$userId'));
     request.headers.addAll(headers);
 
     try {
@@ -64,21 +62,22 @@ class DashboardUsersData {
           Map<String, dynamic>? jsonResponse = json.decode(responseBody);
           return jsonResponse;
         } else {
-          print('Response body is empty or null');
+          logger.d('Response body is empty or null');
           return null;
         }
       } else {
-        print("error: ${response.reasonPhrase}");
+        logger.d("error: ${response.reasonPhrase}");
         return null;
       }
     } catch (e) {
-      print('error: Failed to make HTTP request: $e');
+      logger.d('error: Failed to make HTTP request: $e');
       return null;
     }
   }
 
   static Future<Map<String, dynamic>?> getPeakflowhistories(
       String userId, int month, int year) async {
+    logger.d('userId: ${userId}');
     var headers = {
       // 'Content-Type': 'application/json',
       'Authorization':
@@ -88,7 +87,7 @@ class DashboardUsersData {
     var request = http.Request(
         'GET',
         Uri.parse(
-            'https://qiot-beta-f5013130cafe.herokuapp.com/api/v1/admin/peakflowhistories?id=$userId&month=$month&year=$year'));
+            '${ApiConstants.baseURL}/admin/peakflowhistories?userId=$userId&month=$month&year=$year'));
     request.headers.addAll(headers);
 
     try {
@@ -100,15 +99,90 @@ class DashboardUsersData {
           Map<String, dynamic>? jsonResponse = json.decode(responseBody);
           return jsonResponse;
         } else {
-          print('Response body is empty or null');
+          logger.d('Response body is empty or null');
           return null;
         }
       } else {
-        print("error: ${response.reasonPhrase}");
+        logger.d("error: ${response.reasonPhrase}");
         return null;
       }
     } catch (e) {
-      print('error: Failed to make HTTP request: $e');
+      logger.d('error: Failed to make HTTP request: $e');
+      return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>?> getPeakflowhistoryReport(String userId,
+      int startmonth, int startyear, int endmonth, int endyear) async {
+    logger.d('userId: ${userId}');
+    var headers = {
+      // 'Content-Type': 'application/json',
+      'Authorization':
+          'Bearer ${await SessionStorageHelpers.getStorage('accessToken')}',
+    };
+
+    var request = http.Request(
+        'GET',
+        Uri.parse(
+            '${ApiConstants.baseURL}/admin/peakflowhistoryreport?userId=$userId&startmonth=$startmonth&startyear=$startyear&endmonth=$endmonth&endyear=$endyear'));
+    request.headers.addAll(headers);
+
+    try {
+      http.StreamedResponse response = await request.send();
+      String responseBody = await response.stream.bytesToString();
+
+      if (response.statusCode == 200) {
+        if (responseBody.isNotEmpty) {
+          Map<String, dynamic>? jsonResponse = json.decode(responseBody);
+          return jsonResponse;
+        } else {
+          logger.d('Response body is empty or null');
+          return null;
+        }
+      } else {
+        logger.d("error: ${response.reasonPhrase}");
+        return null;
+      }
+    } catch (e) {
+      logger.d('error: Failed to make HTTP request: $e');
+      return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>?> getACThistories(
+      String userId, int month, int year) async {
+    logger.d('userId: ${userId}');
+    var headers = {
+      // 'Content-Type': 'application/json',
+      'Authorization':
+          'Bearer ${await SessionStorageHelpers.getStorage('accessToken')}',
+    };
+
+    var request = http.Request(
+        'GET',
+        Uri.parse(
+            '${ApiConstants.baseURL}/admin/acthistories?userId=$userId&month=$month&year=$year'));
+    request.headers.addAll(headers);
+
+    try {
+      http.StreamedResponse response = await request.send();
+      String responseBody = await response.stream.bytesToString();
+      logger.d(responseBody);
+
+      if (response.statusCode == 200) {
+        if (responseBody.isNotEmpty) {
+          Map<String, dynamic>? jsonResponse = json.decode(responseBody);
+          return jsonResponse;
+        } else {
+          logger.d('Response body is empty or null');
+          return null;
+        }
+      } else {
+        logger.d("error: ${response.reasonPhrase}");
+        return null;
+      }
+    } catch (e) {
+      logger.d('error: Failed to make HTTP request: $e');
       return null;
     }
   }
@@ -126,7 +200,7 @@ class DashboardUsersData {
     var request = http.MultipartRequest(
         'POST',
         Uri.parse(
-            'https://qiot-beta-f5013130cafe.herokuapp.com/api/v1/admin/uploadasthmaactionplan/$userId'));
+            '${ApiConstants.baseURL}/admin/uploadasthmaactionplan/$userId'));
 
     // Read file bytes
     var reader = html.FileReader();
@@ -155,15 +229,15 @@ class DashboardUsersData {
           Map<String, dynamic>? jsonResponse = json.decode(responseBody);
           return jsonResponse;
         } else {
-          print('Response body is empty or null');
+          logger.d('Response body is empty or null');
           return null;
         }
       } else {
-        print("error: ${response.reasonPhrase}");
+        logger.d("error: ${response.reasonPhrase}");
         return null;
       }
     } catch (e) {
-      print('error: Failed to make HTTP request: $e');
+      logger.d('error: Failed to make HTTP request: $e');
       return null;
     }
   }
@@ -177,10 +251,8 @@ class DashboardUsersData {
           'Bearer ${await SessionStorageHelpers.getStorage('accessToken')}',
     };
 
-    var request = http.MultipartRequest(
-        'POST',
-        Uri.parse(
-            'https://qiot-beta-f5013130cafe.herokuapp.com/api/v1/admin/uploadeducationalplan'));
+    var request = http.MultipartRequest('POST',
+        Uri.parse('${ApiConstants.baseURL}/admin/uploadeducationalplan'));
 
     // Read file bytes
     var reader = html.FileReader();
@@ -209,15 +281,15 @@ class DashboardUsersData {
           Map<String, dynamic>? jsonResponse = json.decode(responseBody);
           return jsonResponse;
         } else {
-          print('Response body is empty or null');
+          logger.d('Response body is empty or null');
           return null;
         }
       } else {
-        print("error: ${response.reasonPhrase}");
+        logger.d("error: ${response.reasonPhrase}");
         return null;
       }
     } catch (e) {
-      print('error: Failed to make HTTP request: $e');
+      logger.d('error: Failed to make HTTP request: $e');
       return null;
     }
   }
@@ -230,9 +302,7 @@ class DashboardUsersData {
     };
 
     var request = http.Request(
-        'GET',
-        Uri.parse(
-            'https://qiot-beta-f5013130cafe.herokuapp.com/api/v1/admin/geteducationalplan'));
+        'GET', Uri.parse('${ApiConstants.baseURL}/admin/geteducationalplan'));
     request.headers.addAll(headers);
     try {
       http.StreamedResponse response = await request.send();
@@ -241,19 +311,19 @@ class DashboardUsersData {
       if (response.statusCode == 200) {
         if (responseBody.isNotEmpty) {
           Map<String, dynamic>? jsonResponse = json.decode(responseBody);
-          print('jsonResponse: $jsonResponse');
+          logger.d('jsonResponse: $jsonResponse');
           return jsonResponse;
         } else {
-          print('Response body is empty or null');
+          logger.d('Response body is empty or null');
           return null;
         }
       } else {
-        print("error: ${response.reasonPhrase}");
+        logger.d("error: ${response.reasonPhrase}");
         Authentication.signOut();
         return null;
       }
     } catch (e) {
-      print('error: Failed to make HTTP request: $e');
+      logger.d('error: Failed to make HTTP request: $e');
       return null;
     }
   }
