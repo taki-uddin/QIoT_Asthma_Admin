@@ -28,6 +28,7 @@ import 'package:qiot_admin/services/api/dashboard_users_data.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 
 class UserDetails extends StatefulWidget {
   final String userId; // Add a field to store the user ID
@@ -192,6 +193,17 @@ class _UserDetailsState extends State<UserDetails> {
 
   Future<void> _getPeakflowHistoryReport() async {
     logger.d('Current Month: $currentMonth, Current Year: $currentYear');
+
+     if (_selectedStartDate != null && _selectedEndDate != null) {
+      if (_selectedEndDate!.year < _selectedStartDate!.year ||
+          (_selectedEndDate!.year == _selectedStartDate!.year &&
+              _selectedEndDate!.month < _selectedStartDate!.month)) {
+
+        _showErrorDialog('Error retrieving data, please verify the dates.');
+        return; 
+      }
+    }
+
     try {
       DashboardUsersData.getPeakflowhistoryReport(
         userId,
@@ -223,6 +235,17 @@ class _UserDetailsState extends State<UserDetails> {
 
   Future<void> _getInhalerHistoryReport() async {
     logger.d('Current Month: $currentMonth, Current Year: $currentYear');
+ 
+
+    if (_selectedStartDate != null && _selectedEndDate != null) {
+      if (_selectedEndDate!.year < _selectedStartDate!.year ||
+          (_selectedEndDate!.year == _selectedStartDate!.year &&
+              _selectedEndDate!.month < _selectedStartDate!.month)) {
+
+        _showErrorDialog('Error retrieving data, please verify the dates.');
+        return; 
+      }
+    }
     try {
       DashboardUsersData.getInhalerhistoryReport(
         context,
@@ -249,6 +272,26 @@ class _UserDetailsState extends State<UserDetails> {
     } on Exception catch (e) {
       logger.e('Failed to fetch data: $e');
     }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Oops!'),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); 
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> generatePDFReport(
@@ -485,38 +528,135 @@ class _UserDetailsState extends State<UserDetails> {
     _getACTHistory(currentMonth, currentYear);
   }
 
-  Future<void> _selectStartDate(BuildContext context) async {
-    DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(), // Default selection
-      firstDate: DateTime(2000), // Minimum date
-      lastDate: DateTime(2100), // Maximum date
-    );
+  // Future<void> _selectStartDate(BuildContext context) async {
+  //   DateTime? pickedDate = await showDatePicker(
+  //     context: context,
+  //     initialDate: DateTime.now(), // Default selection
+  //     firstDate: DateTime(2000), // Minimum date
+  //     lastDate: DateTime(2100), // Maximum date
+  //   );
 
-    // If the user selected a date, update the state
-    if (pickedDate != null && pickedDate != _selectedStartDate) {
-      setState(() {
-        _selectedStartDate = pickedDate;
-      });
-      logger.d('${_selectedStartDate?.month} ${_selectedStartDate?.year}');
-    }
+  //   // If the user selected a date, update the state
+  //   if (pickedDate != null && pickedDate != _selectedStartDate) {
+  //     setState(() {
+  //       _selectedStartDate = pickedDate;
+  //     });
+  //     logger.d('${_selectedStartDate?.month} ${_selectedStartDate?.year}');
+  //   }
+  // }
+  Future<void> _selectStartDate(BuildContext context) async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: SizedBox(
+            height: 350,
+            width: 300,
+            child: SfDateRangePicker(
+              view: DateRangePickerView.year, // Initial view to show months
+              selectionMode: DateRangePickerSelectionMode.single,
+              minDate: DateTime(2000),
+              maxDate: DateTime(2100),
+              showNavigationArrow: true, // Show arrows for navigation
+              headerStyle: DateRangePickerHeaderStyle(
+                backgroundColor: Colors.blueAccent,
+                textStyle: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              initialSelectedDate: _selectedStartDate,
+
+              monthCellStyle: DateRangePickerMonthCellStyle(
+                textStyle: TextStyle(fontSize: 14, color: Colors.transparent),
+              ),
+              allowViewNavigation: false,
+              onViewChanged: (DateRangePickerViewChangedArgs args) {
+                logger.d('Current View: ${args.visibleDateRange.startDate}');
+              },
+              onSelectionChanged: (DateRangePickerSelectionChangedArgs args) {
+                if (args.value is DateTime) {
+                  setState(() {
+                    _selectedStartDate = args.value as DateTime;
+                  });
+                  logger.d(
+                    'Selected Month: ${_selectedStartDate?.month}, Selected Year: ${_selectedStartDate?.year}',
+                  );
+                }
+                Navigator.pop(context); // Close the dialog after selection
+              },
+            ),
+          ),
+        );
+      },
+    );
   }
 
-  Future<void> _selectEndDate(BuildContext context) async {
-    DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(), // Default selection
-      firstDate: DateTime(2000), // Minimum date
-      lastDate: DateTime(2100), // Maximum date
-    );
+  // Future<void> _selectEndDate(BuildContext context) async {
+  //   DateTime? pickedDate = await showDatePicker(
+  //     context: context,
+  //     initialDate: DateTime.now(), // Default selection
+  //     firstDate: DateTime(2000), // Minimum date
+  //     lastDate: DateTime(2100), // Maximum date
+  //   );
 
-    // If the user selected a date, update the state
-    if (pickedDate != null && pickedDate != _selectedEndDate) {
-      setState(() {
-        _selectedEndDate = pickedDate;
-      });
-      logger.d('${_selectedEndDate?.month} ${_selectedEndDate?.year}');
-    }
+  //   // If the user selected a date, update the state
+  //   if (pickedDate != null && pickedDate != _selectedEndDate) {
+  //     setState(() {
+  //       _selectedEndDate = pickedDate;
+  //     });
+  //     logger.d('${_selectedEndDate?.month} ${_selectedEndDate?.year}');
+  //   }
+  // }
+
+  Future<void> _selectEndDate(BuildContext context) async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: SizedBox(
+            height: 350,
+            width: 300,
+            child: SfDateRangePicker(
+              view: DateRangePickerView.year, // Initial view to show months
+              selectionMode: DateRangePickerSelectionMode.single,
+              minDate: DateTime(2000),
+              maxDate: DateTime(2100),
+              showNavigationArrow: true, // Show arrows for navigation
+              headerStyle: DateRangePickerHeaderStyle(
+                backgroundColor: Colors.blueAccent,
+                textStyle: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              initialSelectedDate: _selectedEndDate,
+
+              monthCellStyle: DateRangePickerMonthCellStyle(
+                textStyle: TextStyle(fontSize: 14, color: Colors.transparent),
+              ),
+              allowViewNavigation: false,
+              onViewChanged: (DateRangePickerViewChangedArgs args) {
+                logger.d('Current View: ${args.visibleDateRange.startDate}');
+              },
+              onSelectionChanged: (DateRangePickerSelectionChangedArgs args) {
+                if (args.value is DateTime) {
+                  setState(() {
+                    _selectedEndDate = args.value as DateTime;
+                  });
+                  logger.d(
+                    'Selected Month: ${_selectedEndDate?.month}, Selected Year: ${_selectedEndDate?.year}',
+                  );
+                }
+                Navigator.pop(context); // Close the dialog after selection
+              },
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -1296,7 +1436,6 @@ class _UserDetailsState extends State<UserDetails> {
                                                 )
                                               : const SizedBox.shrink(),
 
-                            
                               SizedBox(
                                 height: 50,
                               ),
