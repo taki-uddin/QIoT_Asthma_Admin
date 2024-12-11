@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:qiot_admin/constants/web_colors.dart';
 import 'package:qiot_admin/main.dart';
+import 'package:qiot_admin/models/inhaler_report_model/inhaler_chart_model.dart';
 import 'package:qiot_admin/models/peakflow_report_model/peakflow_report_chart_model.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
@@ -26,6 +27,7 @@ class _PeakflowReportChartState extends State<PeakflowReportChart> {
   String formatDate(String dateString) {
     DateTime dateTime = DateTime.parse(dateString);
     DateFormat formatter = DateFormat('dd MMM - hh:mm a');
+
     return formatter.format(dateTime);
   }
 
@@ -55,7 +57,7 @@ class _PeakflowReportChartState extends State<PeakflowReportChart> {
             primaryXAxis: CategoryAxis(
               autoScrollingDelta: 7,
               autoScrollingMode: AutoScrollingMode.end,
-              labelRotation: -90,
+              labelRotation: 300,
               edgeLabelPlacement: EdgeLabelPlacement.shift,
               labelStyle: TextStyle(
                 fontSize: 12,
@@ -118,3 +120,7 @@ class _PeakflowReportChartState extends State<PeakflowReportChart> {
           );
   }
 }
+
+
+
+

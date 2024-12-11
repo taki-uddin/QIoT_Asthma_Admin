@@ -39,6 +39,7 @@ dependencies:
   syncfusion_flutter_core: ^26.2.14
   syncfusion_flutter_charts: ^26.2.14
   syncfusion_flutter_datagrid: ^26.2.14
+  path_provider: ^2.1.5
 
 dev_dependencies:
   flutter_test:
@@ -62,6 +63,8 @@ flutter:
     - assets/images/appLogo/
     - assets/pdf/
     - assets/svg/
+  
+  
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

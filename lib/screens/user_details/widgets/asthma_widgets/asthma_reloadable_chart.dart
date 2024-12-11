@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:qiot_admin/main.dart';
 import 'package:qiot_admin/models/asthma_control_test_report_model/asthma_control_test_report_chart_model.dart';
-import 'package:qiot_admin/screens/user_details/widgets/asthma_control_test_report_chart.dart';
+import 'package:qiot_admin/screens/user_details/widgets/asthma_widgets/asthma_control_test_report_chart.dart';
 
 // ignore: must_be_immutable
 class AsthmaReloadableChart extends StatefulWidget {

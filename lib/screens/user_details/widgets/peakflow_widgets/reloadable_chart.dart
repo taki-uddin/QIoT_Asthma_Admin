@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:qiot_admin/models/inhaler_report_model/inhaler_chart_model.dart';
 import 'package:qiot_admin/models/peakflow_report_model/peakflow_report_chart_model.dart';
-import 'package:qiot_admin/screens/user_details/widgets/peakflow_report_chart.dart';
+import 'package:qiot_admin/screens/user_details/widgets/inhaler_widgets/inhaler_report_chart.dart';
+import 'package:qiot_admin/screens/user_details/widgets/peakflow_widgets/peakflow_report_chart.dart';
 
 // ignore: must_be_immutable
 class ReloadableChart extends StatefulWidget {
@@ -36,3 +38,4 @@ class ReloadableChartState extends State<ReloadableChart> {
     );
   }
 }
+

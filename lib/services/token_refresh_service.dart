@@ -17,6 +17,9 @@ class TokenRefreshService {
   TokenRefreshService._internal();
 
   void initialize(String? deviceToken, String deviceType) {
+    print('device token : ${deviceToken}');
+    print('device type : ${deviceType}');
+
     _deviceToken = deviceToken;
     _deviceType = deviceType;
     _timer = Timer.periodic(const Duration(minutes: 45), (timer) async {
@@ -38,6 +41,12 @@ class TokenRefreshService {
     String? accessToken = await SessionStorageHelpers.getStorage('accessToken');
     String? refreshToken =
         await SessionStorageHelpers.getStorage('refreshToken');
+    print('going to call ');
+    print(_deviceToken);
+    print(accessToken);
+    print(refreshToken);
+    print(_deviceType);
+
     try {
       final response = await Authentication().refreshToken(
         accessToken!,
@@ -52,7 +61,7 @@ class TokenRefreshService {
         _updateTokens(newAccessToken, newRefreshToken);
       }
     } catch (e) {
-      logger.d('Failed to refresh token: $e');
+      logger.d('Failed to refresh : $e');
     }
   }
 
