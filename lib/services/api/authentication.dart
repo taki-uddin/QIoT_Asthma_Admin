@@ -19,9 +19,7 @@ class Authentication {
       "deviceType": deviceType,
     });
     request.headers.addAll(headers);
-    print('calling the api');
-    print(deviceType);
-    print(request.body);
+  
     try {
       http.StreamedResponse response = await request.send();
       String responseBody = await response.stream.bytesToString();

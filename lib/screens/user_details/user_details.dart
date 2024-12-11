@@ -313,32 +313,7 @@ class _UserDetailsState extends State<UserDetails> {
           ]);
     }
 
-    // Create a summary section
-    // pw.Widget _buildSummary(List<dynamic> data) {
-    //   final highestValue =
-    //       data.map((e) => e['peakflowValue']).reduce((a, b) => a > b ? a : b);
-    //   final lowestValue =
-    //       data.map((e) => e['peakflowValue']).reduce((a, b) => a < b ? a : b);
-
-    //   return pw
-    //       .Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
-    //     // pw.Text('Summary Statistics',
-    //     //     style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
-    //     pw.SizedBox(height: 10),
-    //     pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
-    //       pw.Text('Highest ' + value + ' Value:',
-    //           style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-    //       pw.Text('$highestValue ')
-    //     ]),
-    //     pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
-    //       pw.Text('Lowest ' + value + ' Value:',
-    //           style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-    //       pw.Text('$lowestValue ')
-    //     ]),
-
-    //     pw.Divider()
-    //   ]);
-    // }
+ 
 
     // Create a detailed table of measurements
     pw.Widget _buildDetailTable(List<dynamic> data) {
@@ -375,10 +350,9 @@ class _UserDetailsState extends State<UserDetails> {
       );
     }
 
-    print('building the pdf pdf pdf');
+ 
 
-    // Build the PDF document
-
+     //pdf making
     pdf.addPage(pw.MultiPage(
         build: (pw.Context context) => [
               _buildHeader(),

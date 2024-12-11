@@ -41,11 +41,7 @@ class TokenRefreshService {
     String? accessToken = await SessionStorageHelpers.getStorage('accessToken');
     String? refreshToken =
         await SessionStorageHelpers.getStorage('refreshToken');
-    print('going to call ');
-    print(_deviceToken);
-    print(accessToken);
-    print(refreshToken);
-    print(_deviceType);
+  
 
     try {
       final response = await Authentication().refreshToken(
