@@ -16,10 +16,10 @@ class PeakflowLegendsZone extends StatelessWidget {
       width: screenSize.width,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               _buildZoneRow(
@@ -69,14 +69,14 @@ class PeakflowLegendsZone extends StatelessWidget {
     required String label,
   }) {
     return SizedBox(
-      width: screenSize.width * 0.25,
+      width: screenSize.width * 0.3,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            width: screenRatio * 8,
-            height: screenRatio * 8,
+            width: screenRatio * 10,
+            height: screenRatio * 10,
             color: color,
           ),
           SizedBox(width: screenRatio * 6),
@@ -85,7 +85,7 @@ class PeakflowLegendsZone extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(
               color: color,
-              fontSize: 5 * screenRatio,
+              fontSize: 8 * screenRatio,
               fontWeight: FontWeight.normal,
               fontFamily: 'Roboto',
             ),

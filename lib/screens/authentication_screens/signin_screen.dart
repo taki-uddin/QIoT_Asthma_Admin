@@ -29,6 +29,7 @@ class _SigninScreenState extends State<SigninScreen> {
   }
 
   void onSignIn() async {
+    print('hello');
     if (_formKey.currentState != null && _formKey.currentState!.validate()) {
       String email = _emailController.text.trim();
       String password = _passwordController.text.trim();

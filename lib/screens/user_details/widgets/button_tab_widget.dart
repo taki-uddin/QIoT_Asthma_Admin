@@ -52,7 +52,7 @@ class ButtonTabWidget extends StatelessWidget {
             ),
             label != 'Fitness & Stress'
                 ? Container(
-                    width: screenRatio * (inhaler != true ? 28 : 52),
+                    width: screenRatio * (inhaler != true ? 28 : 46),
                     height: MediaQuery.of(context).size.height * 0.06,
                     decoration: BoxDecoration(
                       color: color,

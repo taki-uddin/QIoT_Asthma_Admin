@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:qiot_admin/constants/api_constants.dart';
 import 'dart:html' as html;
@@ -21,6 +22,9 @@ class DashboardUsersData {
     try {
       http.StreamedResponse response = await request.send();
       String responseBody = await response.stream.bytesToString();
+      // if (response.statusCode == 403) {
+      //   print('calling the api again');
+      // }
 
       if (response.statusCode == 200) {
         if (responseBody.isNotEmpty) {
@@ -54,10 +58,14 @@ class DashboardUsersData {
     request.headers.addAll(headers);
 
     try {
+      print('the requestes data for user is:');
+      print(request);
       http.StreamedResponse response = await request.send();
       String responseBody = await response.stream.bytesToString();
 
       if (response.statusCode == 200) {
+        print('the value is for user data:');
+        print(responseBody);
         if (responseBody.isNotEmpty) {
           Map<String, dynamic>? jsonResponse = json.decode(responseBody);
           return jsonResponse;
@@ -91,10 +99,57 @@ class DashboardUsersData {
     request.headers.addAll(headers);
 
     try {
+      print('the requestes data is:');
+      print(request);
+      print(headers);
       http.StreamedResponse response = await request.send();
       String responseBody = await response.stream.bytesToString();
 
       if (response.statusCode == 200) {
+        print('the value is for peakflow is data:');
+        print(responseBody);
+        if (responseBody.isNotEmpty) {
+          Map<String, dynamic>? jsonResponse = json.decode(responseBody);
+          return jsonResponse;
+        } else {
+          logger.d('Response body is empty or null');
+          return null;
+        }
+      } else {
+        logger.d("error: ${response.reasonPhrase}");
+        return null;
+      }
+    } catch (e) {
+      logger.d('error: Failed to make HTTP request: $e');
+      return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>?> getInhalerhistories(
+      String userId, int month, int year) async {
+    logger.d('userId: ${userId}');
+    var headers = {
+      // 'Content-Type': 'application/json',
+      'Authorization':
+          'Bearer ${await SessionStorageHelpers.getStorage('accessToken')}',
+    };
+
+    var request = http.Request(
+        'GET',
+        Uri.parse(
+            '${ApiConstants.baseURL}/admin/inhalerhistories?userId=$userId&month=$month&year=$year'));
+    request.headers.addAll(headers);
+
+    try {
+      print('the requestes data is:');
+      print(request);
+      print(headers);
+      http.StreamedResponse response = await request.send();
+      String responseBody = await response.stream.bytesToString();
+
+      if (response.statusCode == 200) {
+        print('the value is for inhaler is data:');
+        print(responseBody);
         if (responseBody.isNotEmpty) {
           Map<String, dynamic>? jsonResponse = json.decode(responseBody);
           return jsonResponse;
@@ -140,6 +195,64 @@ class DashboardUsersData {
           return null;
         }
       } else {
+        logger.d("error: ${response.reasonPhrase}");
+        return null;
+      }
+    } catch (e) {
+      logger.d('error: Failed to make HTTP request: $e');
+      return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>?> getInhalerhistoryReport(BuildContext context,String userId,
+      int startmonth, int startyear, int endmonth, int endyear) async {
+    logger.d('userId: ${userId}');
+    var headers = {
+      // 'Content-Type': 'application/json',
+      'Authorization':
+          'Bearer ${await SessionStorageHelpers.getStorage('accessToken')}',
+    };
+
+    var request = http.Request(
+        'GET',
+        Uri.parse(
+            '${ApiConstants.baseURL}/admin/inhalerhistoryreport?userId=$userId&startmonth=$startmonth&startyear=$startyear&endmonth=$endmonth&endyear=$endyear'));
+    request.headers.addAll(headers);
+
+    try {
+      http.StreamedResponse response = await request.send();
+      String responseBody = await response.stream.bytesToString();
+
+      if (response.statusCode == 200) {
+        if (responseBody.isNotEmpty) {
+          Map<String, dynamic>? jsonResponse = json.decode(responseBody);
+          return jsonResponse;
+        } else {
+          logger.d('Response body is empty or null');
+          return null;
+        }
+      } else if (response.statusCode == 404) {
+        print('no data found');
+        showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('No Data Found'),
+            content: const Text('No data is available for the selected period.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close the dialog
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+        
+      } else {
+        print('eror not found the value');
         logger.d("error: ${response.reasonPhrase}");
         return null;
       }
