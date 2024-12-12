@@ -4,10 +4,10 @@ const TEMP = 'flutter-temp-cache';
 const CACHE_NAME = 'flutter-app-cache';
 
 const RESOURCES = {"flutter.js": "383e55f7f3cce5be08fcf1f3881f585c",
-"main.dart.js": "3d35a10e5a614f17c35b3ac545481cfa",
+"main.dart.js": "62ae15366409c087f473e51b76315305",
 "assets/FontManifest.json": "ac3f70900a17dc2eb8830a3e27c653c3",
 "assets/AssetManifest.bin": "1059e72b3ebe2395639e2ec18d542354",
-"assets/fonts/MaterialIcons-Regular.otf": "08d61da2771eb5bcf2cd8af5b6598c7c",
+"assets/fonts/MaterialIcons-Regular.otf": "3309a96a9bb1095554a9d828ecc62de2",
 "assets/packages/cupertino_icons/assets/CupertinoIcons.ttf": "e986ebe42ef785b27164c36a9abc7818",
 "assets/packages/syncfusion_flutter_datagrid/assets/font/FilterIcon.ttf": "c17d858d09fb1c596ef0adbf08872086",
 "assets/packages/syncfusion_flutter_datagrid/assets/font/UnsortIcon.ttf": "6d8ab59254a120b76bf53f167e809470",
@@ -18,7 +18,7 @@ const RESOURCES = {"flutter.js": "383e55f7f3cce5be08fcf1f3881f585c",
 "assets/assets/images/appLogo/appLogo_3x-nobg.png": "4cd6f035684aca0f7635ccc86b96b046",
 "assets/assets/svg/personal_plan.svg": "c2e6720e67957e86fe77bacf3f145420",
 "assets/assets/svg/logo.svg": "56fb8ace1effac68cbc845fdea75dba3",
-"assets/NOTICES": "b26c503ad39c8f1869985f86b4f82bcf",
+"assets/NOTICES": "5cbb34725c4c94c78928bb0271ea53df",
 "assets/shaders/ink_sparkle.frag": "ecc85a2e95f5e9f53123dcaf8cb9b6ce",
 "assets/AssetManifest.json": "41cddfa9fed97ceaf5800afe32801e4f",
 "assets/AssetManifest.bin.json": "92d898772aa4dc4c4500fdbc4834f1d5",
@@ -41,7 +41,7 @@ const RESOURCES = {"flutter.js": "383e55f7f3cce5be08fcf1f3881f585c",
 "icons/Icon-maskable-512.png": "301a7604d45b3e739efc881eb04896ea",
 "favicon.png": "5dcef449791fa27946b3d35ad8803796",
 "version.json": "4a2d99bd8da9f5a65f9f8fe428c51e7a",
-"flutter_bootstrap.js": "495e0fe707e6311146b367e10b8b0f82"};
+"flutter_bootstrap.js": "ba2324937bb31d6569a3fb5dfdd99bfc"};
 // The application shell files that are downloaded before a service worker can
 // start.
 const CORE = ["main.dart.js",
