@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:qiot_admin/constants/web_colors.dart';
 import 'package:qiot_admin/main.dart';
@@ -38,14 +39,13 @@ class _PeakflowReportChartState extends State<PeakflowReportChart> {
 
     logger.d('Peakflow: ${widget.hasData}');
     return !widget.hasData
-        ? const Center(
+        ?  Center(
             child: Text(
               'No peakflow data available',
-              style: TextStyle(
+              style: GoogleFonts.manrope(
                 color: WebColors.primaryBlue,
-                fontSize: 14,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'Roboto',
               ),
             ),
           )

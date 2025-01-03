@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class ButtonTabWidget extends StatelessWidget {
   final String label;
-  final Color color;
-  final Color textColor;
+  final Color? color;
+  final Color? textColor;
   final dynamic value;
   final bool? inhaler;
   final VoidCallback onTap;
@@ -12,8 +13,8 @@ class ButtonTabWidget extends StatelessWidget {
   const ButtonTabWidget({
     super.key,
     required this.label,
-    required this.color,
-    required this.textColor,
+    this.color,
+    this.textColor,
     required this.value,
     this.inhaler,
     required this.onTap,
@@ -44,13 +45,19 @@ class ButtonTabWidget extends StatelessWidget {
           children: [
             Text(
               '$label: ',
-              style: TextStyle(
+              // style: TextStyle(
+              //   fontSize: screenRatio * 8,
+              //   fontWeight: FontWeight.bold,
+              //   color: const Color(0xFF000000),
+              // ),
+              style: GoogleFonts.manrope(
                 fontSize: screenRatio * 8,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF000000),
+                letterSpacing: -.4,
+                height: 0,
+                fontWeight: FontWeight.w800,
               ),
             ),
-            label != 'Fitness & Stress'
+            label != 'Fitness & Stress' && label != 'Diurinal Variation'
                 ? Container(
                     width: screenRatio * (inhaler != true ? 28 : 46),
                     height: MediaQuery.of(context).size.height * 0.06,
@@ -69,10 +76,16 @@ class ButtonTabWidget extends StatelessWidget {
                       child: Text(
                         '$value',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: screenRatio * 9,
-                          fontWeight: FontWeight.bold,
-                          color: textColor,
+                        // style: TextStyle(
+                        //   fontSize: screenRatio * 9,
+                        //   fontWeight: FontWeight.bold,
+                        //   color: textColor,
+                        // ),
+                        style: GoogleFonts.manrope(
+                          fontSize: screenRatio * 8,
+                          letterSpacing: -.4,
+                          height: 0,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                     ),

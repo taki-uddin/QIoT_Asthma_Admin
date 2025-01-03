@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:qiot_admin/constants/web_colors.dart';
 import 'package:qiot_admin/main.dart';
@@ -34,11 +35,10 @@ class _AsthmaControlTestReportChartState
         ? Center(
             child: Text(
               'No asthma control test data available',
-              style: TextStyle(
+              style: GoogleFonts.manrope(
                 color: WebColors.primaryBlue,
-                fontSize: 12,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'Roboto',
               ),
             ),
           )
@@ -50,7 +50,7 @@ class _AsthmaControlTestReportChartState
             primaryXAxis: CategoryAxis(
               autoScrollingDelta: 7,
               autoScrollingMode: AutoScrollingMode.end,
-              labelRotation: -90,
+              labelRotation: 300,
               edgeLabelPlacement: EdgeLabelPlacement.shift,
               labelStyle: TextStyle(
                 fontSize: 12,
@@ -60,7 +60,7 @@ class _AsthmaControlTestReportChartState
             primaryYAxis: const NumericAxis(
               // Assuming fitness is represented as numeric value
               minimum: 0,
-              maximum: 30, // Adjust according to your fitness values
+              maximum: 30,
               interval: 5,
             ),
             tooltipBehavior: TooltipBehavior(

@@ -48,6 +48,7 @@ class _MainState extends State<Main> {
     print("going to call token refresh");
     _tokenRefreshService.initialize(null, deviceType);
 
+
     _tokenRefreshService.startTokenRefreshTimer(); // Optional refresh token
   }
 

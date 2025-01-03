@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:qiot_admin/constants/month_abbreviations.dart';
@@ -9,6 +10,7 @@ import 'package:qiot_admin/constants/web_colors.dart';
 import 'package:qiot_admin/main.dart';
 import 'package:qiot_admin/models/asthma_control_test_report_model/asthma_control_test_report_chart_model.dart';
 import 'package:qiot_admin/models/asthma_control_test_report_model/asthma_control_test_report_table_model.dart';
+import 'package:qiot_admin/models/fitness_stress_report_model/stress_fitness_report_model.dart';
 import 'package:qiot_admin/models/inhaler_report_model/inhaler_chart_model.dart';
 import 'package:qiot_admin/models/inhaler_report_model/inhaler_table_model.dart';
 import 'package:qiot_admin/models/peakflow_report_model/peakflow_report_chart_model.dart';
@@ -18,6 +20,9 @@ import 'package:qiot_admin/screens/user_details/widgets/asthma_widgets/act_legen
 import 'package:qiot_admin/screens/user_details/widgets/asthma_widgets/asthma_control_test_report_table.dart';
 import 'package:qiot_admin/screens/user_details/widgets/asthma_widgets/asthma_reloadable_chart.dart';
 import 'package:qiot_admin/screens/user_details/widgets/button_tab_widget.dart';
+import 'package:qiot_admin/screens/user_details/widgets/fitnessStress_widgets/fitness_stress_reloadable_chart.dart';
+import 'package:qiot_admin/screens/user_details/widgets/fitnessStress_widgets/fitness_stress_report_table.dart';
+import 'package:qiot_admin/screens/user_details/widgets/fitnessStress_widgets/fitnessstress_legends_zone.dart';
 import 'package:qiot_admin/screens/user_details/widgets/inhaler_widgets/inhaler_legends_zone.dart';
 import 'package:qiot_admin/screens/user_details/widgets/inhaler_widgets/inhaler_report_table.dart';
 import 'package:qiot_admin/screens/user_details/widgets/inhaler_widgets/reloadable_chart_inhaler.dart';
@@ -58,6 +63,11 @@ class _UserDetailsState extends State<UserDetails> {
   List<AsthmaControlTestReportChartModel> asthmacontroltestReportChartData = [];
   List<AsthmaControlTestReportTableModel> asthmacontroltestReportTableData = [];
 
+  List<dynamic> fitnessStressReportHistory = [];
+  Map<String, dynamic> fitnessstressReportData = {};
+  List<FitnessStressReportModel> fitnessstressReportChartData = [];
+  List<FitnessStressReportModel> fitnessstressReportTableData = [];
+
   DateTime currentDate = DateTime.now();
   int currentMonth = 1;
   int currentYear = 1;
@@ -70,6 +80,7 @@ class _UserDetailsState extends State<UserDetails> {
   bool steroid = false;
   bool inhaler = false;
   bool diurinal = false;
+  bool fitnessStress = false;
 
   @override
   void initState() {
@@ -194,13 +205,12 @@ class _UserDetailsState extends State<UserDetails> {
   Future<void> _getPeakflowHistoryReport() async {
     logger.d('Current Month: $currentMonth, Current Year: $currentYear');
 
-     if (_selectedStartDate != null && _selectedEndDate != null) {
+    if (_selectedStartDate != null && _selectedEndDate != null) {
       if (_selectedEndDate!.year < _selectedStartDate!.year ||
           (_selectedEndDate!.year == _selectedStartDate!.year &&
               _selectedEndDate!.month < _selectedStartDate!.month)) {
-
         _showErrorDialog('Error retrieving data, please verify the dates.');
-        return; 
+        return;
       }
     }
 
@@ -235,15 +245,13 @@ class _UserDetailsState extends State<UserDetails> {
 
   Future<void> _getInhalerHistoryReport() async {
     logger.d('Current Month: $currentMonth, Current Year: $currentYear');
- 
 
     if (_selectedStartDate != null && _selectedEndDate != null) {
       if (_selectedEndDate!.year < _selectedStartDate!.year ||
           (_selectedEndDate!.year == _selectedStartDate!.year &&
               _selectedEndDate!.month < _selectedStartDate!.month)) {
-
         _showErrorDialog('Error retrieving data, please verify the dates.');
-        return; 
+        return;
       }
     }
     try {
@@ -274,6 +282,49 @@ class _UserDetailsState extends State<UserDetails> {
     }
   }
 
+  Future<void> _getFitnessStressHistoryReport() async {
+    logger.d('Current Month: $currentMonth, Current Year: $currentYear');
+
+    if (_selectedStartDate != null && _selectedEndDate != null) {
+      if (_selectedEndDate!.year < _selectedStartDate!.year ||
+          (_selectedEndDate!.year == _selectedStartDate!.year &&
+              _selectedEndDate!.month < _selectedStartDate!.month)) {
+        _showErrorDialog('Error retrieving data, please verify the dates.');
+        return;
+      }
+    }
+    try {
+      DashboardUsersData.getFitnessStresshistoryReport(
+        context,
+        userId,
+        _selectedStartDate?.month ?? int.parse(DateTime.now().month.toString()),
+        _selectedStartDate?.year ?? int.parse(DateTime.now().year.toString()),
+        _selectedEndDate?.month ?? int.parse(DateTime.now().month.toString()),
+        _selectedEndDate?.year ?? int.parse(DateTime.now().year.toString()),
+      ).then(
+        (value) async {
+          if (value != null) {
+            // logger.d('value: ${value['payload']}');
+            setState(() {
+              fitnessStressReportHistory = value['payload']['fitnessAndStress'];
+            });
+            logger
+                .d('Inhaler report: ${fitnessStressReportHistory.toString()}');
+            await generatePDFReport(
+                fitnessStressReportHistory,
+                'Fitness and Stress History Report',
+                'Fitness and Stress',
+                'fitness');
+          } else {
+            logger.d('Failed to get user data');
+          }
+        },
+      );
+    } on Exception catch (e) {
+      logger.e('Failed to fetch data: $e');
+    }
+  }
+
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
@@ -284,7 +335,7 @@ class _UserDetailsState extends State<UserDetails> {
           actions: <Widget>[
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); 
+                Navigator.of(context).pop();
               },
               child: Text('OK'),
             ),
@@ -313,46 +364,65 @@ class _UserDetailsState extends State<UserDetails> {
           ]);
     }
 
- 
-
     // Create a detailed table of measurements
+
     pw.Widget _buildDetailTable(List<dynamic> data) {
-      return pw.TableHelper.fromTextArray(
-        context: null,
-        data: [
-          ...data
-              .map((entry) => [
-                    entry['createdAt'].toString(),
-                    type == 'peakflow'
-                        ? entry['peakflowValue'].toString()
-                        : type == 'inhaler'
-                            ? entry['inhalerValue'].toString()
-                            : "No data",
-                    '${entry['dailyVariation'].toStringAsFixed(2)}%',
-                    entry['highValue'].toString(),
-                    entry['lowValue'].toString(),
-                    entry['averageValue'].toString()
-                  ])
-              .toList()
-        ],
-        headers: [
-          'Date',
-          value,
-          'Daily Variation',
-          'High Value',
-          'Low Value',
-          'Average'
-        ],
-        headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-        cellStyle: pw.TextStyle(fontSize: 10),
-        headerAlignment: pw.Alignment.center,
-        cellAlignment: pw.Alignment.center,
-      );
+      return type == 'fitness'
+          ? pw.TableHelper.fromTextArray(
+              context: null,
+              data: [
+                ...data
+                    .map((entry) => [
+                          entry['createdAt'].toString(),
+                          entry['fitness'].toString(),
+                          entry['stress'].toString()
+                        ])
+                    .toList()
+              ],
+              headers: [
+                'Date',
+                'Fitness Value',
+                'Stress Value',
+              ],
+              headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+              cellStyle: pw.TextStyle(fontSize: 10),
+              headerAlignment: pw.Alignment.center,
+              cellAlignment: pw.Alignment.center,
+            )
+          : pw.TableHelper.fromTextArray(
+              context: null,
+              data: [
+                ...data
+                    .map((entry) => [
+                          entry['createdAt'].toString(),
+                          type == 'peakflow'
+                              ? entry['peakflowValue'].toString()
+                              : type == 'inhaler'
+                                  ? entry['inhalerValue'].toString()
+                                  : "No data",
+                          '${entry['dailyVariation'].toStringAsFixed(2)}%',
+                          entry['highValue'].toString(),
+                          entry['lowValue'].toString(),
+                          entry['averageValue'].toString()
+                        ])
+                    .toList()
+              ],
+              headers: [
+                'Date',
+                value,
+                'Daily Variation',
+                'High Value',
+                'Low Value',
+                'Average'
+              ],
+              headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+              cellStyle: pw.TextStyle(fontSize: 10),
+              headerAlignment: pw.Alignment.center,
+              cellAlignment: pw.Alignment.center,
+            );
     }
 
- 
-
-     //pdf making
+    //pdf making
     pdf.addPage(pw.MultiPage(
         build: (pw.Context context) => [
               _buildHeader(),
@@ -391,6 +461,11 @@ class _UserDetailsState extends State<UserDetails> {
         currentYear,
       ).then(
         (value) async {
+          print('the vlaue issssssss');
+          print(value);
+
+          print('API Response: $value');
+          print('Payload: ${value?['payload']}');
           if (value != null) {
             logger.d('value: ${value['payload']}');
             setState(() {
@@ -416,6 +491,151 @@ class _UserDetailsState extends State<UserDetails> {
         },
       );
     } on Exception catch (e) {
+      logger.e('Failed to fetch data: $e');
+    }
+  }
+
+  // Future<void> _getFitnessStressHistory(
+  //     int currentMonth, int currentYear) async {
+  //   logger.d('Current Month: $currentMonth, Current Year: $currentYear');
+  //   try {
+  //     fitnessstressReportChartData.clear();
+  //     fitnessstressReportTableData.clear();
+  //     DashboardUsersData.getFitnessStresshistories(
+  //       userId,
+  //       currentMonth,
+  //       currentYear,
+  //     ).then(
+  //       (value) async {
+  //         if (value != null) {
+  //           logger.d('value: ${value['payload']}');
+  //           setState(() {
+  //             fitnessstressReportData = value['payload'];
+  //           });
+  //           for (var i in fitnessstressReportData['fitnessandstress']) {
+  //             fitnessstressReportChartData.add(
+  //               FitnessStressReportModel(
+  //                   i['createdAt'], i['fitness'], i['stress']),
+  //             );
+  //             fitnessstressReportTableData.add(
+  //               FitnessStressReportModel(
+  //                   i['createdAt'], i['fitness'], i['stress']),
+  //             );
+  //           }
+  //         } else {
+  //           logger.d('Failed to get user data');
+  //         }
+  //       },
+  //     );
+  //   } on Exception catch (e) {
+  //     logger.e('Failed to fetch data: $e');
+  //   }
+  // }
+
+  // Future<void> _getFitnessStressHistory(
+  //     int currentMonth, int currentYear) async {
+  //   logger.d('Current Month: $currentMonth, Current Year: $currentYear');
+
+  //   print('entered here ');
+
+  //   try {
+  //     print('entered here as well');
+  //     setState(() {
+  //       fitnessstressReportChartData.clear();
+  //       fitnessstressReportTableData.clear();
+  //     });
+
+  //     final value = await DashboardUsersData.getFitnessStresshistories(
+  //       userId,
+  //       currentMonth,
+  //       currentYear,
+  //     );
+
+  //     print('the vlaue issssssss');
+  //     print(value);
+
+  //     print('API Response: $value');
+  //     print('Payload: ${value?['payload']}');
+  //     print('Fitness Data: ${value?['payload']['fitnessandstress']}');
+
+  //     if (value == null || value['payload'] == null) {
+  //       logger.d('Failed to get user user user  data');
+  //       return;
+  //     }
+
+  //     setState(() {
+  //       fitnessstressReportData = value['payload'];
+
+  //       final fitnessData = fitnessstressReportData['fitnessandstress'] ?? [];
+
+  //       print('Fitness and Stress Data: $fitnessData');
+  //       for (var i in fitnessData) {
+  //         print('Record: $i');
+  //       }
+
+  //       for (var i in fitnessData) {
+  //         final model = FitnessStressReportModel(
+  //           i['createdAt'] ?? '',
+  //           i['fitness'] ?? 'No data',
+  //           i['stress'] ?? 'No data',
+  //         );
+  //         fitnessstressReportChartData.add(model);
+  //         fitnessstressReportTableData.add(model);
+  //       }
+  //     });
+  //   } catch (e) {
+  //     logger.e('Failed to fetch data: $e');
+  //   }
+  // }
+
+  Future<void> _getFitnessStressHistory(
+      int currentMonth, int currentYear) async {
+    logger.d('Current Month: $currentMonth, Current Year: $currentYear');
+
+    try {
+      setState(() {
+        fitnessstressReportChartData.clear();
+        fitnessstressReportTableData.clear();
+      });
+
+      final value = await DashboardUsersData.getFitnessStresshistories(
+        userId,
+        currentMonth,
+        currentYear,
+      );
+
+      print('API Response: $value');
+
+      if (value == null || value['payload'] == null) {
+        logger.d('Failed to get user fitness and stress data');
+        return;
+      }
+
+      setState(() {
+        fitnessstressReportData = value['payload'];
+
+        final fitnessData = fitnessstressReportData['fitnessandstress'] ?? [];
+        print('Fitness and Stress Data: $fitnessData');
+
+        for (var i in fitnessData) {
+          try {
+            print('Processing record: $i');
+
+            // Ensure all fields have default values if null
+            final model = FitnessStressReportModel(
+              i['createdAt'] ?? '', // Default empty string if null
+              i['fitness'] ?? 'No Data', // Default to 'No Data' if null
+              i['stress'] ?? 'No Data', // Default to 'No Data' if null
+            );
+
+            fitnessstressReportChartData.add(model);
+            fitnessstressReportTableData.add(model);
+          } catch (e) {
+            logger.e('Error processing record: $i, Error: $e');
+          }
+        }
+      });
+    } catch (e) {
       logger.e('Failed to fetch data: $e');
     }
   }
@@ -446,6 +666,20 @@ class _UserDetailsState extends State<UserDetails> {
       }
     });
     _getACTHistory(currentMonth, currentYear);
+  }
+
+  void getPrevMonthFitnessStress() {
+    setState(() {
+      fitnessstressReportChartData.clear();
+      fitnessstressReportTableData.clear();
+
+      currentMonth -= 1;
+      if (currentMonth == 0) {
+        currentMonth = 12;
+        currentYear -= 1;
+      }
+    });
+    _getFitnessStressHistory(currentMonth, currentYear);
   }
 
   void getPrevMonthInhaler() {
@@ -498,8 +732,23 @@ class _UserDetailsState extends State<UserDetails> {
         currentMonth = 1;
         currentYear += 1;
       }
+      asthmacontroltestReportData['asthamcontroltestRecordedOn'];
     });
     _getACTHistory(currentMonth, currentYear);
+  }
+
+  void getNextMonthFitness() {
+    setState(() {
+      fitnessstressReportTableData.clear();
+      fitnessstressReportChartData.clear();
+
+      currentMonth += 1;
+      if (currentMonth == 13) {
+        currentMonth = 1;
+        currentYear += 1;
+      }
+    });
+    _getFitnessStressHistory(currentMonth, currentYear);
   }
 
   // Future<void> _selectStartDate(BuildContext context) async {
@@ -662,9 +911,11 @@ class _UserDetailsState extends State<UserDetails> {
                           children: [
                             Text(
                               'Name: ${userData['firstName']} ${userData['lastName']}', // Display the user Name
-                              style: const TextStyle(
+                              style: GoogleFonts.manrope(
                                 fontSize: 18,
-                                fontWeight: FontWeight.normal,
+                                letterSpacing: -.4,
+                                height: 0,
+                                fontWeight: FontWeight.w800,
                               ),
                             ),
                           ],
@@ -703,6 +954,7 @@ class _UserDetailsState extends State<UserDetails> {
                                         steroid = false;
                                         inhaler = false;
                                         diurinal = false;
+                                        fitnessStress = false;
                                       });
                                     },
                                     screenRatio:
@@ -725,6 +977,7 @@ class _UserDetailsState extends State<UserDetails> {
                                         steroid = false;
                                         inhaler = false;
                                         diurinal = false;
+                                        fitnessStress = false;
                                       });
                                     },
                                     screenRatio:
@@ -739,17 +992,19 @@ class _UserDetailsState extends State<UserDetails> {
                                         ? const Color(0xFFFFFFFF)
                                         : const Color(0xFFFF8500),
                                     value: userData['steroidDosage'],
-                                    onTap: () {
-                                      _getPeakflowHistory(
-                                          currentMonth, currentYear);
-                                      setState(() {
-                                        peakflow = false;
-                                        asthma = false;
-                                        steroid = true;
-                                        inhaler = false;
-                                        diurinal = false;
-                                      });
-                                    },
+                                    // onTap: () {
+                                    //   _getPeakflowHistory(
+                                    //       currentMonth, currentYear);
+                                    //   setState(() {
+                                    //     peakflow = false;
+                                    //     asthma = false;
+                                    //     steroid = true;
+                                    //     inhaler = false;
+                                    //     diurinal = false;
+                                    //     fitnessStress = false;
+                                    //   });
+                                    // },
+                                    onTap: () {},
                                     screenRatio:
                                         screenSize.width / screenSize.height,
                                   ),
@@ -778,6 +1033,7 @@ class _UserDetailsState extends State<UserDetails> {
                                         steroid = false;
                                         inhaler = true;
                                         diurinal = false;
+                                        fitnessStress = false;
                                       });
                                     },
                                     screenRatio:
@@ -785,25 +1041,28 @@ class _UserDetailsState extends State<UserDetails> {
                                   ),
                                   ButtonTabWidget(
                                     label: 'Diurinal Variation',
-                                    color: diurinal
-                                        ? const Color(0xFFFD4646)
-                                        : const Color(0xFFFFECEC),
-                                    textColor: diurinal
-                                        ? const Color(0xFFFFFFFF)
-                                        : const Color(0xFFFD4646),
-                                    value: userData['steroidDosage'],
+                                    // color: diurinal
+                                    //     ? const Color(0xFFFD4646)
+                                    //     : const Color(0xFFFFECEC),
+                                    // textColor: diurinal
+                                    //     ? const Color(0xFFFFFFFF)
+                                    //     : const Color(0xFFFD4646),
+                                    // value: userData['steroidDosage'],
+                                    value: '',
                                     inhaler: true,
-                                    onTap: () {
-                                      _getPeakflowHistory(
-                                          currentMonth, currentYear);
-                                      setState(() {
-                                        peakflow = false;
-                                        asthma = false;
-                                        steroid = false;
-                                        inhaler = false;
-                                        diurinal = true;
-                                      });
-                                    },
+                                    // onTap: () {
+                                    //   _getPeakflowHistory(
+                                    //       currentMonth, currentYear);
+                                    //   setState(() {
+                                    //     peakflow = false;
+                                    //     asthma = false;
+                                    //     steroid = false;
+                                    //     inhaler = false;
+                                    //     diurinal = true;
+                                    //     fitnessStress = false;
+                                    //   });
+                                    // },
+                                    onTap: () {},
                                     screenRatio:
                                         screenSize.width / screenSize.height,
                                   ),
@@ -811,14 +1070,22 @@ class _UserDetailsState extends State<UserDetails> {
                                     label: 'Fitness & Stress',
                                     color: const Color(0xFF27AE60),
                                     textColor: const Color(0xFFFFFFFF),
-                                    value: userData['steroidDosage'],
-                                    inhaler: true,
+                                    value:
+                                        userData['steroidDosage'] ?? 'No Data',
+
+                                    // inhaler: true,
                                     onTap: () {
-                                      _getPeakflowHistory(
+                                      _getFitnessStressHistory(
                                           currentMonth, currentYear);
                                       setState(() {
                                         // showDrainageRate = true;
                                         // showRespiratoryRate = false;
+                                        peakflow = false;
+                                        asthma = false;
+                                        steroid = false;
+                                        inhaler = false;
+                                        diurinal = false;
+                                        fitnessStress = true;
                                       });
                                     },
                                     screenRatio:
@@ -864,7 +1131,12 @@ class _UserDetailsState extends State<UserDetails> {
                                                           text:
                                                               'Asthma Recorded on:',
                                                         )
-                                                      : Text('data'),
+                                                      : fitnessStress
+                                                          ? dataRecordText(
+                                                              text:
+                                                                  'F and S Recorded on:',
+                                                            )
+                                                          : Text('data'),
                                         ),
                                         Container(
                                           // width: screenSize.width * 0.14,
@@ -876,25 +1148,30 @@ class _UserDetailsState extends State<UserDetails> {
                                             child: Text(
                                               peakflow
                                                   ? peakflowReportData[
-                                                          'peakflowRecordedOn']
-                                                      .toString()
+                                                          'peakflowRecordedOn'] ??
+                                                      'No data'
                                                   : inhaler
                                                       ? inhalerReportData[
-                                                              'inhalerRecordedOn']
-                                                          .toString()
+                                                              'inhalerRecordedOn'] ??
+                                                          "No data"
                                                       : asthma
                                                           ? asthmacontroltestReportData[
-                                                                  'asthamcontroltestRecordedOn']
-                                                              .toString()
-                                                          : peakflowReportData[
-                                                                  'peakflowRecordedOn']
-                                                              .toString(),
+                                                                  'asthamcontroltestRecordedOn'] ??
+                                                              "No data"
+                                                          : fitnessStress
+                                                              ? fitnessstressReportData[
+                                                                      'fitnessandstressRecordedOn'] ??
+                                                                  "No data"
+                                                              : peakflowReportData[
+                                                                      'peakflowRecordedOn'] ??
+                                                                  "No data",
                                               textAlign: TextAlign.right,
-                                              style: const TextStyle(
-                                                color: Color(0xFF004283),
+                                              style: GoogleFonts.manrope(
                                                 fontSize: 14,
-                                                fontWeight: FontWeight.w500,
-                                                fontFamily: 'Roboto',
+                                                letterSpacing: -.2,
+                                                height: 0,
+                                                color: Color(0xFF004283),
+                                                fontWeight: FontWeight.w400,
                                               ),
                                             ),
                                           ),
@@ -911,10 +1188,17 @@ class _UserDetailsState extends State<UserDetails> {
                                       children: [
                                         Text(
                                           'Download report:',
-                                          style: TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.bold,
-                                              color: WebColors.primaryBlue),
+                                          // style: TextStyle(
+                                          //     fontSize: 14,
+                                          //     fontWeight: FontWeight.bold,
+                                          //     color: WebColors.primaryBlue),
+                                          style: GoogleFonts.manrope(
+                                            fontSize: 14,
+                                            letterSpacing: -.2,
+                                            height: 0,
+                                            color: Color(0xFF004283),
+                                            fontWeight: FontWeight.w800,
+                                          ),
                                         ),
                                         SizedBox(
                                           width: screenSize.width * 0.01,
@@ -931,20 +1215,24 @@ class _UserDetailsState extends State<UserDetails> {
                                             children: [
                                               Text(
                                                 'Start Date: ',
-                                                style: TextStyle(
+                                                style: GoogleFonts.manrope(
                                                   fontSize: 14,
+                                                  letterSpacing: -.2,
+                                                  height: 0,
+                                                  color: Color(0xFF004283),
                                                   fontWeight: FontWeight.w500,
-                                                  color: WebColors.primaryBlue,
                                                 ),
                                               ),
                                               Text(
                                                 _selectedStartDate != null
                                                     ? '${_selectedStartDate?.month} / ${_selectedStartDate?.year}'
                                                     : 'N/A',
-                                                style: TextStyle(
+                                                style: GoogleFonts.manrope(
                                                   fontSize: 14,
+                                                  letterSpacing: -.2,
+                                                  height: 0,
+                                                  color: Color(0xFF004283),
                                                   fontWeight: FontWeight.w500,
-                                                  color: WebColors.primaryBlue,
                                                 ),
                                               ),
                                             ],
@@ -965,20 +1253,24 @@ class _UserDetailsState extends State<UserDetails> {
                                             children: [
                                               Text(
                                                 'End Date: ',
-                                                style: TextStyle(
+                                                style: GoogleFonts.manrope(
                                                   fontSize: 14,
+                                                  letterSpacing: -.2,
+                                                  height: 0,
+                                                  color: Color(0xFF004283),
                                                   fontWeight: FontWeight.w500,
-                                                  color: WebColors.primaryBlue,
                                                 ),
                                               ),
                                               Text(
                                                 _selectedStartDate != null
                                                     ? '${_selectedEndDate?.month} / ${_selectedEndDate?.year}'
                                                     : 'N/A',
-                                                style: TextStyle(
+                                                style: GoogleFonts.manrope(
                                                   fontSize: 14,
+                                                  letterSpacing: -.2,
+                                                  height: 0,
+                                                  color: Color(0xFF004283),
                                                   fontWeight: FontWeight.w500,
-                                                  color: WebColors.primaryBlue,
                                                 ),
                                               ),
                                             ],
@@ -1000,7 +1292,9 @@ class _UserDetailsState extends State<UserDetails> {
                                                       _getInhalerHistoryReport()
                                                       : asthma
                                                           ? ()
-                                                          : ();
+                                                          : fitnessStress
+                                                              ? _getFitnessStressHistoryReport()
+                                                              : ();
                                             },
                                             icon: Icon(
                                               Icons.download,
@@ -1033,43 +1327,54 @@ class _UserDetailsState extends State<UserDetails> {
                                               MainAxisAlignment.start,
                                           children: [
                                             peakflow
-                                                ? const Align(
+                                                ? Align(
                                                     alignment:
                                                         Alignment.centerLeft,
                                                     child: Text(
                                                       'Peakflow Record:',
                                                       textAlign: TextAlign.left,
-                                                      style: TextStyle(
+                                                      // style: TextStyle(
+                                                      //   color:
+                                                      //       Color(0xFF004283),
+                                                      //   fontSize: 16,
+                                                      //   fontWeight:
+                                                      //       FontWeight.bold,
+                                                      //   fontFamily: 'Roboto',
+                                                      // ),
+                                                      style:
+                                                          GoogleFonts.manrope(
+                                                        fontSize: 16,
+                                                        letterSpacing: -.2,
+                                                        height: 0,
                                                         color:
                                                             Color(0xFF004283),
-                                                        fontSize: 16,
                                                         fontWeight:
-                                                            FontWeight.bold,
-                                                        fontFamily: 'Roboto',
+                                                            FontWeight.w800,
                                                       ),
                                                     ),
                                                   )
                                                 : inhaler
-                                                    ? const Align(
+                                                    ? Align(
                                                         alignment: Alignment
                                                             .centerLeft,
                                                         child: Text(
                                                           'Inhaler Record:',
                                                           textAlign:
                                                               TextAlign.left,
-                                                          style: TextStyle(
+                                                          style: GoogleFonts
+                                                              .manrope(
+                                                            fontSize: 16,
+                                                            letterSpacing: -.2,
+                                                            height: 0,
                                                             color: Color(
                                                                 0xFF004283),
-                                                            fontSize: 16,
                                                             fontWeight:
-                                                                FontWeight.bold,
-                                                            fontFamily:
-                                                                'Roboto',
+                                                                FontWeight.w800,
                                                           ),
                                                         ),
                                                       )
                                                     : asthma
-                                                        ? const Align(
+                                                        ? Align(
                                                             alignment: Alignment
                                                                 .centerLeft,
                                                             child: Text(
@@ -1077,38 +1382,67 @@ class _UserDetailsState extends State<UserDetails> {
                                                               textAlign:
                                                                   TextAlign
                                                                       .left,
-                                                              style: TextStyle(
+                                                              style: GoogleFonts
+                                                                  .manrope(
+                                                                fontSize: 16,
+                                                                letterSpacing:
+                                                                    -.2,
+                                                                height: 0,
                                                                 color: Color(
                                                                     0xFF004283),
-                                                                fontSize: 16,
                                                                 fontWeight:
                                                                     FontWeight
-                                                                        .bold,
-                                                                fontFamily:
-                                                                    'Roboto',
+                                                                        .w800,
                                                               ),
                                                             ),
                                                           )
-                                                        : const Align(
-                                                            alignment: Alignment
-                                                                .centerLeft,
-                                                            child: Text(
-                                                              'Peakflow Record:',
-                                                              textAlign:
-                                                                  TextAlign
-                                                                      .left,
-                                                              style: TextStyle(
-                                                                color: Color(
-                                                                    0xFF004283),
-                                                                fontSize: 10,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                fontFamily:
-                                                                    'Roboto',
+                                                        : fitnessStress
+                                                            ? Align(
+                                                                alignment: Alignment
+                                                                    .centerLeft,
+                                                                child: Text(
+                                                                  'Fitness and Stress Record:',
+                                                                  textAlign:
+                                                                      TextAlign
+                                                                          .left,
+                                                                  style: GoogleFonts
+                                                                      .manrope(
+                                                                    fontSize:
+                                                                        16,
+                                                                    letterSpacing:
+                                                                        -.2,
+                                                                    height: 0,
+                                                                    color: Color(
+                                                                        0xFF004283),
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w800,
+                                                                  ),
+                                                                ),
+                                                              )
+                                                            : Align(
+                                                                alignment: Alignment
+                                                                    .centerLeft,
+                                                                child: Text(
+                                                                  'Peakflow Record:',
+                                                                  textAlign:
+                                                                      TextAlign
+                                                                          .left,
+                                                                  style: GoogleFonts
+                                                                      .manrope(
+                                                                    fontSize:
+                                                                        16,
+                                                                    letterSpacing:
+                                                                        -.2,
+                                                                    height: 0,
+                                                                    color: Color(
+                                                                        0xFF004283),
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w800,
+                                                                  ),
+                                                                ),
                                                               ),
-                                                            ),
-                                                          ),
                                           ],
                                         ),
                                       ),
@@ -1139,7 +1473,9 @@ class _UserDetailsState extends State<UserDetails> {
                                                             ? getPrevMonthInhaler()
                                                             : asthma
                                                                 ? getPrevMonthAsthma()
-                                                                : ();
+                                                                : fitnessStress
+                                                                    ? getPrevMonthFitnessStress()
+                                                                    : ();
                                                   },
                                                   child: Container(
                                                     width: 36,
@@ -1216,13 +1552,15 @@ class _UserDetailsState extends State<UserDetails> {
                                                   child: Center(
                                                     child: Text(
                                                       '${monthAbbreviations[currentMonth - 1]} - $currentYear',
-                                                      style: TextStyle(
+                                                      style:
+                                                          GoogleFonts.manrope(
+                                                        fontSize: 14,
+                                                        letterSpacing: -.2,
+                                                        height: 0,
                                                         color:
                                                             Color(0xFF004283),
-                                                        fontSize: 12,
                                                         fontWeight:
-                                                            FontWeight.bold,
-                                                        fontFamily: 'Roboto',
+                                                            FontWeight.w800,
                                                       ),
                                                     ),
                                                   ),
@@ -1236,7 +1574,9 @@ class _UserDetailsState extends State<UserDetails> {
                                                             ? getNextMonthInhaler()
                                                             : asthma
                                                                 ? getNextMonthAsthma()
-                                                                : ();
+                                                                : fitnessStress
+                                                                    ? getNextMonthFitness()
+                                                                    : ();
                                                   },
                                                   child: Container(
                                                     width: 36,
@@ -1354,22 +1694,38 @@ class _UserDetailsState extends State<UserDetails> {
                                                     : false,
                                               ),
                                             )
-                                          : SizedBox(
-                                              width: screenSize.width,
-                                              height: screenSize.height * 0.4,
-                                              child: ReloadableChart(
-                                                baseLineScore:
-                                                    peakflowReportData[
-                                                            'baseLineScore']
-                                                        .toString(),
-                                                peakflowReportChartData:
-                                                    peakflowReportChartData,
-                                                hasData: peakflowReportChartData
-                                                        .isNotEmpty
-                                                    ? true
-                                                    : false,
-                                              ),
-                                            ),
+                                          : fitnessStress
+                                              ? SizedBox(
+                                                  width: screenSize.width,
+                                                  height:
+                                                      screenSize.height * 0.4,
+                                                  child: FitnessStressReloadableChart(
+                                                      fitnessstressReloadableChartData:
+                                                          fitnessstressReportChartData,
+                                                      hasData:
+                                                          fitnessstressReportChartData
+                                                                  .isNotEmpty
+                                                              ? true
+                                                              : false),
+                                                )
+                                              : SizedBox(
+                                                  width: screenSize.width,
+                                                  height:
+                                                      screenSize.height * 0.4,
+                                                  child: ReloadableChart(
+                                                    baseLineScore:
+                                                        peakflowReportData[
+                                                                'baseLineScore']
+                                                            .toString(),
+                                                    peakflowReportChartData:
+                                                        peakflowReportChartData,
+                                                    hasData:
+                                                        peakflowReportChartData
+                                                                .isNotEmpty
+                                                            ? true
+                                                            : false,
+                                                  ),
+                                                ),
                               // Peakflow Legends Zone
                               SizedBox(
                                 height: 30,
@@ -1401,18 +1757,9 @@ class _UserDetailsState extends State<UserDetails> {
                                                   // screenSize: screenSize,
                                                   )
                                               : const SizedBox.shrink()
-                                          : peakflowReportChartData.isNotEmpty
-                                              ? PeakflowLegendsZone(
-                                                  screenRatio:
-                                                      screenSize.width /
-                                                          screenSize.height,
-                                                  screenSize: screenSize,
-                                                )
-                                              : const SizedBox.shrink(),
-
-                              SizedBox(
-                                height: 50,
-                              ),
+                                          : SizedBox(
+                                              height: 50,
+                                            ),
 
                               peakflow
                                   ? peakflowReportChartData.isNotEmpty
@@ -1452,7 +1799,23 @@ class _UserDetailsState extends State<UserDetails> {
                                                           inhalerReportTableData),
                                                 )
                                               : const SizedBox.shrink()
-                                          : SizedBox.shrink()
+                                          : fitnessStress
+                                              ? fitnessstressReportTableData
+                                                      .isNotEmpty
+                                                  ? SizedBox(
+                                                      key: ValueKey(
+                                                          currentMonth),
+                                                      width: screenSize.width,
+                                                      // child: PeakflowReportTable(
+                                                      //   peakflowReportTableData:
+                                                      //       peakflowReportTableData,
+                                                      // ),
+                                                      child: FitnessStressReportTable(
+                                                          fitnessstressReportTableData:
+                                                              fitnessstressReportTableData),
+                                                    )
+                                                  : const SizedBox.shrink()
+                                              : SizedBox.shrink()
                             ],
                           ),
                         ),
@@ -1486,11 +1849,18 @@ class dataRecordText extends StatelessWidget {
       child: Text(
         text,
         textAlign: TextAlign.left,
-        style: TextStyle(
-          color: Color(0xFF004283),
+        // style: TextStyle(
+        //   color: Color(0xFF004283),
+        //   fontSize: 14,
+        //   fontWeight: FontWeight.bold,
+        //   fontFamily: 'Roboto',
+        // ),
+        style: GoogleFonts.manrope(
           fontSize: 14,
-          fontWeight: FontWeight.bold,
-          fontFamily: 'Roboto',
+          letterSpacing: -.2,
+          height: 0,
+          color: Color(0xFF004283),
+          fontWeight: FontWeight.w800,
         ),
       ),
     );
