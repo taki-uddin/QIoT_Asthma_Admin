@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -9,13 +8,13 @@ import 'package:syncfusion_flutter_charts/charts.dart';
 
 class InhalerReportChart extends StatefulWidget {
   final List<InhalerReportChartModel>? inhalerReportChartData;
-  final String baseLineScore;
+  final String salbutomalDosage;
   final bool hasData;
 
   const InhalerReportChart({
     super.key,
     required this.inhalerReportChartData,
-    required this.baseLineScore,
+    required this.salbutomalDosage,
     required this.hasData,
   });
 
@@ -36,8 +35,9 @@ class _InhalerReportChartState extends State<InhalerReportChart> {
         MediaQuery.of(context).size.height / MediaQuery.of(context).size.width;
 
     logger.d('Inhaler: ${widget.hasData}');
+    // double salbutomalDosage = double.parse(widget.salbutomalDosage);
     return !widget.hasData
-        ?  Center(
+        ? Center(
             child: Text(
               'No Inhaler data available',
               style: GoogleFonts.manrope(
@@ -64,37 +64,24 @@ class _InhalerReportChartState extends State<InhalerReportChart> {
             ),
             primaryYAxis: NumericAxis(
               // Changed from CategoryAxis to NumericAxis
+              title: AxisTitle(text: 'Inhaler Value'),
               minimum: 0,
-              maximum: 50,
-              interval: 5,
-              plotBands: [
-                PlotBand(
-                  verticalTextPadding: '5%',
-                  horizontalTextPadding: '5%',
-                  textAngle: 0,
-                  start: double.parse(widget
-                      .baseLineScore), // Ensure base line score is parsed to double
-                  end: double.parse(widget.baseLineScore),
-                  borderColor: const Color(0xFF27AE60).withOpacity(1),
-                  borderWidth: 2,
-                ),
-                PlotBand(
-                  start: 0,
-                  end: 200,
-                  color: const Color(0xFFFD4646).withOpacity(0.4),
-                ),
-                PlotBand(
-                  start: 200,
-                  end: 400,
-                  color: const Color(0xFFFF8500).withOpacity(0.4),
-                ),
-                PlotBand(
-                  start: 400,
-                  end: 800,
-                  color: const Color(0xFF27AE60).withOpacity(0.4),
-                ),
-              ],
+              maximum: 20,
+              interval: 1,
             ),
+            axes: [
+              NumericAxis(
+                name: 'Salbutamol Dosage',
+                opposedPosition: true,
+                minimum: 0,
+                maximum: widget.hasData
+                    ? double.parse(widget.salbutomalDosage) * 20
+                    : 20,
+                interval:
+                    widget.hasData ? double.parse(widget.salbutomalDosage) : 1,
+                title: AxisTitle(text: 'Salbutamol Dosage'),
+              ),
+            ],
             legend: const Legend(
               isVisible: false,
             ),
@@ -102,7 +89,18 @@ class _InhalerReportChartState extends State<InhalerReportChart> {
               enable: true,
               header: 'Inhaler',
             ),
-            
+            onTooltipRender: (TooltipArgs args) {
+              // Find the corresponding data point
+              final index = args.pointIndex ?? 0;
+              final data = widget.inhalerReportChartData?[index.toInt()];
+              double salvalue =
+                  double.parse(widget.salbutomalDosage) * data!.inhalerValue;
+
+              if (data != null) {
+                args.text =
+                    'Date: ${formatDate(data.createdAt)}\nInhaler Value: ${data.inhalerValue}\nSalbutamol Dosage: ${salvalue}';
+              }
+            },
             series: <CartesianSeries<InhalerReportChartModel, String>>[
               LineSeries<InhalerReportChartModel, String>(
                 dataSource: widget.inhalerReportChartData,
