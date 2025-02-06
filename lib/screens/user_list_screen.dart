@@ -252,15 +252,23 @@ class _UserListScreenState extends State<UserListScreen> {
                 ),
               ),
               Expanded(
+                
                 child: ListView.builder(
+                  
                   itemCount: filteredUserData.length,
                   itemBuilder: (BuildContext context, int index) {
+                    print('filtered length is:');
+                    print(filteredUserData.length);
+                    print('the value');
+
+                    print(filteredUserData[index]['firstName']);
                     return GestureDetector(
                       onTap: () {
+                    
                         Navigator.pushNamed(
                           context,
-                          '/usersdetails/${userData[index]['_id']}',
-                          arguments: {'id': '${userData[index]['_id']}'},
+                          '/usersdetails/${filteredUserData[index]['_id']}',
+                          arguments: {'id': '${filteredUserData[index]['_id']}'},
                         );
                       },
                       child: MouseRegion(
