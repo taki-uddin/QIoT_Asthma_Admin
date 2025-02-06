@@ -30968,7 +30968,7 @@ b=A
 s=3
 return A.C(A.e_("accessToken"),$async$DL)
 case 3:h=d.aj([c,"Bearer "+b.f(a3)],i,i)
-n=A.fV("GET",A.d6("https://qiot-beta-f5013130cafe.herokuapp.com/api/v1/admin/steroiddose?id="+a+"&month="+a0+"&year="+a1,0,null))
+n=A.fV("GET",A.d6("https://qiot-beta-f5013130cafe.herokuapp.com/api/v1/admin/steroiddose?userId="+a+"&month="+a0+"&year="+a1,0,null))
 n.r.G(0,h)
 p=5
 s=8
