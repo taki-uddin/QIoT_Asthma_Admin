@@ -862,6 +862,8 @@ class _UserDetailsState extends State<UserDetails> {
         currentMonth = 12;
         currentYear -= 1;
       }
+      _selectedStartDate = DateTime(currentYear, currentMonth);
+      _selectedEndDate = DateTime(currentYear, currentMonth);
     });
     _getPeakflowHistory(currentMonth, currentYear);
   }
@@ -876,6 +878,8 @@ class _UserDetailsState extends State<UserDetails> {
         currentMonth = 12;
         currentYear -= 1;
       }
+      _selectedStartDate = DateTime(currentYear, currentMonth);
+      _selectedEndDate = DateTime(currentYear, currentMonth);
     });
     _getACTHistory(currentMonth, currentYear);
   }
@@ -890,6 +894,8 @@ class _UserDetailsState extends State<UserDetails> {
         currentMonth = 12;
         currentYear -= 1;
       }
+      _selectedStartDate = DateTime(currentYear, currentMonth);
+      _selectedEndDate = DateTime(currentYear, currentMonth);
     });
     _getSteroidHistory(currentMonth, currentYear);
   }
@@ -905,6 +911,9 @@ class _UserDetailsState extends State<UserDetails> {
         currentMonth = 12;
         currentYear -= 1;
       }
+
+      _selectedStartDate = DateTime(currentYear, currentMonth);
+      _selectedEndDate = DateTime(currentYear, currentMonth);
     });
     _getDiurinalHistory(currentMonth, currentYear);
   }
@@ -919,6 +928,8 @@ class _UserDetailsState extends State<UserDetails> {
         currentMonth = 12;
         currentYear -= 1;
       }
+      _selectedStartDate = DateTime(currentYear, currentMonth);
+      _selectedEndDate = DateTime(currentYear, currentMonth);
     });
     _getFitnessStressHistory(currentMonth, currentYear);
   }
@@ -932,6 +943,8 @@ class _UserDetailsState extends State<UserDetails> {
         currentMonth = 12;
         currentYear -= 1;
       }
+      _selectedStartDate = DateTime(currentYear, currentMonth);
+      _selectedEndDate = DateTime(currentYear, currentMonth);
     });
     _getInhalerHistory(currentMonth, currentYear);
   }
@@ -947,6 +960,8 @@ class _UserDetailsState extends State<UserDetails> {
         currentMonth = 1;
         currentYear += 1;
       }
+      _selectedStartDate = DateTime(currentYear, currentMonth);
+      _selectedEndDate = DateTime(currentYear, currentMonth);
     });
     _getPeakflowHistory(currentMonth, currentYear);
   }
@@ -960,6 +975,8 @@ class _UserDetailsState extends State<UserDetails> {
         currentMonth = 1;
         currentYear += 1;
       }
+      _selectedStartDate = DateTime(currentYear, currentMonth);
+      _selectedEndDate = DateTime(currentYear, currentMonth);
     });
     _getInhalerHistory(currentMonth, currentYear);
   }
@@ -973,6 +990,9 @@ class _UserDetailsState extends State<UserDetails> {
         currentMonth = 1;
         currentYear += 1;
       }
+      _selectedStartDate = DateTime(currentYear, currentMonth);
+      _selectedEndDate = DateTime(currentYear, currentMonth);
+
       asthmacontroltestReportData['asthamcontroltestRecordedOn'];
     });
     _getACTHistory(currentMonth, currentYear);
@@ -987,6 +1007,9 @@ class _UserDetailsState extends State<UserDetails> {
         currentMonth = 1;
         currentYear += 1;
       }
+      _selectedStartDate = DateTime(currentYear, currentMonth);
+      _selectedEndDate = DateTime(currentYear, currentMonth);
+
       steroidReportData['steroiddoseRecordedOn'];
     });
     _getSteroidHistory(currentMonth, currentYear);
@@ -1003,6 +1026,9 @@ class _UserDetailsState extends State<UserDetails> {
         currentMonth = 1;
         currentYear += 1;
       }
+      _selectedStartDate = DateTime(currentYear, currentMonth);
+      _selectedEndDate = DateTime(currentYear, currentMonth);
+
       steroidReportData['steroiddoseRecordedOn'];
     });
     _getDiurinalHistory(currentMonth, currentYear);
@@ -1018,6 +1044,8 @@ class _UserDetailsState extends State<UserDetails> {
         currentMonth = 1;
         currentYear += 1;
       }
+      _selectedStartDate = DateTime(currentYear, currentMonth);
+      _selectedEndDate = DateTime(currentYear, currentMonth);
     });
     _getFitnessStressHistory(currentMonth, currentYear);
   }
@@ -1539,18 +1567,17 @@ class _UserDetailsState extends State<UserDetails> {
                                                       ? _getasthmaHistoryReport()
                                                       : steroid
                                                           ? _getSteroidHistoryReport()
-                                                          :diurinal?
-                                                           _getDiurinalHistoryReport(): 
-                                                          
-                                                          inhaler
-                                                              ?
-                                                              // print('calling inhaler')
-                                                              _getInhalerHistoryReport()
-                                                              : asthma
-                                                                  ? ()
-                                                                  : fitnessStress
-                                                                      ? _getFitnessStressHistoryReport()
-                                                                      : ();
+                                                          : diurinal
+                                                              ? _getDiurinalHistoryReport()
+                                                              : inhaler
+                                                                  ?
+                                                                  // print('calling inhaler')
+                                                                  _getInhalerHistoryReport()
+                                                                  : asthma
+                                                                      ? ()
+                                                                      : fitnessStress
+                                                                          ? _getFitnessStressHistoryReport()
+                                                                          : ();
                                             },
                                             icon: Icon(
                                               Icons.download,
