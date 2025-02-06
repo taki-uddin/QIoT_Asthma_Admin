@@ -454,7 +454,7 @@ class DashboardUsersData {
     var request = http.Request(
         'GET',
         Uri.parse(
-            '${ApiConstants.baseURL}/admin/steroiddose?id=$userId&month=$month&year=$year'));
+            '${ApiConstants.baseURL}/admin/steroiddose?userId=$userId&month=$month&year=$year'));
     request.headers.addAll(headers);
 
     try {
