@@ -52,7 +52,7 @@ class _InhalerReportChartState extends State<InhalerReportChart> {
               enablePanning: true,
             ),
             enableAxisAnimation: true,
-            primaryXAxis: CategoryAxis(
+            primaryXAxis: CategoryAxis( 
               autoScrollingDelta: 7,
               autoScrollingMode: AutoScrollingMode.end,
               labelRotation: 300,
