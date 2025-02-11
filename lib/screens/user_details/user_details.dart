@@ -103,6 +103,7 @@ class _UserDetailsState extends State<UserDetails> {
   bool diurinal = false;
   bool fitnessStress = false;
 
+
   @override
   void initState() {
     super.initState();
