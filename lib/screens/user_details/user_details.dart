@@ -449,6 +449,7 @@ class _UserDetailsState extends State<UserDetails> {
   Future<void> generatePDFReport(
       List<dynamic> report, String header, String value, String type) async {
     final pdf = pw.Document();
+    
 
     // Create a header for the PDF
     pw.Widget _buildHeader() {
@@ -755,6 +756,8 @@ class _UserDetailsState extends State<UserDetails> {
       // peakflowReportTableData.clear();
       // inhalerReportChartData.clear();
       // inhalerReportTableData.clear();
+      diurinalReportChartDataxaxis.clear();
+      diurinalReportChartDatayaxis.clear();
       diurinalReportTableData.clear();
       DashboardUsersData.getdiurinalhistories(
               userId, currentMonth, currentYear, type)
@@ -1313,8 +1316,7 @@ class _UserDetailsState extends State<UserDetails> {
                                     //     ? const Color(0xFFFFFFFF)
                                     //     : const Color(0xFFFD4646),
                                     // value: userData['steroidDosage'],
-                                    value: '10',
-                                    inhaler: true,
+                                    value: 'No data',
                                     onTap: () {
                                       _getDiurinalHistory(
                                           currentMonth, currentYear);
@@ -1429,7 +1431,10 @@ class _UserDetailsState extends State<UserDetails> {
                                                       ? steroidReportData[
                                                               'steroiddoseRecordedOn'] ??
                                                           'No data'
-                                                      : inhaler
+                                                      :diurinal ?
+                                                         diurinalReportData['diurinalRecordedOn'] ?? 'No data':
+                                                      
+                                                      inhaler
                                                           ? inhalerReportData[
                                                                   'inhalerRecordedOn'] ??
                                                               "No data"
@@ -2028,12 +2033,8 @@ class _UserDetailsState extends State<UserDetails> {
                                                         inhalerReportData[
                                                                 'salbutomalDosage']
                                                             .toString(),
-                                                    // peakflowReportChartData:
-                                                    //     peakflowReportChartData,
                                                     inhalerReportChartData:
                                                         inhalerReportChartData,
-                                                    // hasData: peakflowReportChartData
-                                                    //         .isNotEmpty
                                                     hasData:
                                                         inhalerReportChartData
                                                                 .isNotEmpty
@@ -2049,26 +2050,16 @@ class _UserDetailsState extends State<UserDetails> {
                                                               0.4,
                                                       child:
                                                           DiurinalReloadableChart(
-                                                        // salbutomalDosage:
-                                                        //     inhalerReportData[
-                                                        //             'salbutomalDosage']
-                                                        //         .toString(),
-                                                        // peakflowReportChartData:
-                                                        //     peakflowReportChartData,
                                                         diruinalxReportChartData:
                                                             diurinalReportChartDataxaxis,
                                                         diruinalyReportChartData:
                                                             diurinalReportChartDatayaxis,
-
-                                                        // inhalerReportChartData:
-                                                        //     inhalerReportChartData,
-
-                                                        hasData:
-                                                            diurinalReportChartDataxaxis
-                                                                    // inhalerReportChartData
+                                                        hasData: diurinalReportChartDataxaxis
+                                                                    .isNotEmpty &&
+                                                                diurinalReportChartDatayaxis
                                                                     .isNotEmpty
-                                                                ? true
-                                                                : false,
+                                                            ? true
+                                                            : false,
                                                       ),
                                                     )
                                                   : fitnessStress
@@ -2198,10 +2189,6 @@ class _UserDetailsState extends State<UserDetails> {
                                                               currentMonth),
                                                           width:
                                                               screenSize.width,
-                                                          // child: PeakflowReportTable(
-                                                          //   peakflowReportTableData:
-                                                          //       peakflowReportTableData,
-                                                          // ),
                                                           child: InhalerReportTable(
                                                               salbutomalDosage:
                                                                   inhalerReportData[
@@ -2218,10 +2205,6 @@ class _UserDetailsState extends State<UserDetails> {
                                                                   currentMonth),
                                                               width: screenSize
                                                                   .width,
-                                                              // child: PeakflowReportTable(
-                                                              //   peakflowReportTableData:
-                                                              //       peakflowReportTableData,
-                                                              // ),
                                                               child: FitnessStressReportTable(
                                                                   fitnessstressReportTableData:
                                                                       fitnessstressReportTableData),

@@ -37,7 +37,6 @@ class _DiurinalReportChartChartState extends State<DiurinalReportChart> {
   Widget build(BuildContext context) {
     final double screenRatio =
         MediaQuery.of(context).size.height / MediaQuery.of(context).size.width;
-
     logger.d('diurinal: ${widget.hasData}');
     return !widget.hasData
         ? Center(

@@ -184,7 +184,7 @@ class _DiurinalReportTableState extends State<DiurinalReportTable> {
                 SizedBox(
                   width: dailyVariationWidth, // Set width
                   child: Text(
-                    data.dailyVariation.toString(),
+                    data.dailyVariation!.toStringAsFixed(2),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 12,

@@ -257,11 +257,11 @@ class _UserListScreenState extends State<UserListScreen> {
                   
                   itemCount: filteredUserData.length,
                   itemBuilder: (BuildContext context, int index) {
-                    print('filtered length is:');
-                    print(filteredUserData.length);
-                    print('the value');
+                    // print('filtered length is:');
+                    // print(filteredUserData.length);
+                    // print('the value');
 
-                    print(filteredUserData[index]['firstName']);
+                    // print(filteredUserData[index]['firstName']);
                     return GestureDetector(
                       onTap: () {
                     
