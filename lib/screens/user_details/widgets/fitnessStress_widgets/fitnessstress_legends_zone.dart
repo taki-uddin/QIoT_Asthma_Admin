@@ -30,7 +30,7 @@ class FitnessstressLegendsZone extends StatelessWidget {
                   child: Row(
                     children: [
                       Text(
-                        'Value:1-Low',
+                        'Low',
                         textAlign: TextAlign.left,
                         style: TextStyle(
                           color: Color(0xFFFD4646),
@@ -49,7 +49,7 @@ class FitnessstressLegendsZone extends StatelessWidget {
             child: Row(
               children: [
                 Text(
-                  'Value:2 -Medium',
+                  'Medium',
                   textAlign: TextAlign.left,
                   style: TextStyle(
                     color: Color(0xFFF2C94C),
@@ -65,7 +65,7 @@ class FitnessstressLegendsZone extends StatelessWidget {
             child: Row(
               children: [
                 Text(
-                  'Value:3-High',
+                  'High',
                   textAlign: TextAlign.left,
                   style: TextStyle(
                     color: Color(0xFF27AE60),

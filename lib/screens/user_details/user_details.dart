@@ -1983,7 +1983,7 @@ class _UserDetailsState extends State<UserDetails> {
                                   ? // Peakflow Chart
                                   SizedBox(
                                       width: screenSize.width,
-                                      height: screenSize.height * 0.4,
+                                      height: screenSize.height * 0.5,
                                       child: ReloadableChart(
                                         baseLineScore:
                                             peakflowReportData['baseLineScore']
@@ -1999,7 +1999,7 @@ class _UserDetailsState extends State<UserDetails> {
                                   : steroid
                                       ? SizedBox(
                                           width: screenSize.width,
-                                          height: screenSize.height * 0.4,
+                                          height: screenSize.height * 0.5,
                                           child: SteroidReloadableChart(
                                             steroidReportChartData:
                                                 steroidReportChartData,
@@ -2013,7 +2013,7 @@ class _UserDetailsState extends State<UserDetails> {
                                           ? // Asthma Control Test Chart
                                           SizedBox(
                                               width: screenSize.width,
-                                              height: screenSize.height * 0.4,
+                                              height: screenSize.height * 0.5,
                                               child: AsthmaReloadableChart(
                                                 asthmaControlTestReportChartData:
                                                     asthmacontroltestReportChartData,
@@ -2028,7 +2028,7 @@ class _UserDetailsState extends State<UserDetails> {
                                               ? SizedBox(
                                                   width: screenSize.width,
                                                   height:
-                                                      screenSize.height * 0.4,
+                                                      screenSize.height * 0.5,
                                                   child: InhalerReloadableChart(
                                                     salbutomalDosage:
                                                         inhalerReportData[
@@ -2048,7 +2048,7 @@ class _UserDetailsState extends State<UserDetails> {
                                                       width: screenSize.width,
                                                       height:
                                                           screenSize.height *
-                                                              0.4,
+                                                              0.5,
                                                       child:
                                                           DiurinalReloadableChart(
                                                         diruinalxReportChartData:
@@ -2069,7 +2069,7 @@ class _UserDetailsState extends State<UserDetails> {
                                                               screenSize.width,
                                                           height: screenSize
                                                                   .height *
-                                                              0.4,
+                                                              0.5,
                                                           child: FitnessStressReloadableChart(
                                                               fitnessstressReloadableChartData:
                                                                   fitnessstressReportChartData,
@@ -2084,7 +2084,7 @@ class _UserDetailsState extends State<UserDetails> {
                                                               screenSize.width,
                                                           height: screenSize
                                                                   .height *
-                                                              0.4,
+                                                              0.5,
                                                           child:
                                                               ReloadableChart(
                                                             baseLineScore:
@@ -2102,7 +2102,7 @@ class _UserDetailsState extends State<UserDetails> {
                                                         ),
                               // Peakflow Legends Zone
                               SizedBox(
-                                height: 30,
+                                height: 20,
                               ),
 
                               peakflow
@@ -2131,6 +2131,16 @@ class _UserDetailsState extends State<UserDetails> {
                                                   // screenSize: screenSize,
                                                   )
                                               : const SizedBox.shrink()
+                             /*     : fitnessStress
+                                  ? fitnessstressReportTableData
+                                  .isNotEmpty
+                                  ? FitnessstressLegendsZone(
+                                 screenRatio:
+                                     screenSize.width /
+                                         screenSize.height,
+                                 screenSize: screenSize,
+                              )
+                                  : const SizedBox.shrink()*/
                                           : SizedBox(
                                               height: 50,
                                             ),

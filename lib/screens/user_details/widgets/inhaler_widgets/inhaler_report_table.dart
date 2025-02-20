@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:qiot_admin/models/inhaler_report_model/inhaler_table_model.dart';
 import 'package:qiot_admin/utils/convertToCustomFormat.dart';
 
@@ -27,7 +28,10 @@ class _InhalerReportTableState extends State<InhalerReportTable> {
     final Size screenSize = MediaQuery.of(context).size;
     double screenRatio = screenSize.height / screenSize.width;
 
-
+    String convertToCustomFormat(String dateTime) {
+      DateTime parsedDate = DateTime.parse(dateTime);
+      return DateFormat('dd/MM/yyyy hh:mm a').format(parsedDate);
+    }
     // Define column widths
     final double inhalerObservedOnWidth =
         screenSize.width * 0.2; // Adjust as needed
