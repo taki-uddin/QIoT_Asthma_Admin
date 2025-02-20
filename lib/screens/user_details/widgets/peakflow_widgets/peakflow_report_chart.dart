@@ -27,7 +27,7 @@ class PeakflowReportChart extends StatefulWidget {
 class _PeakflowReportChartState extends State<PeakflowReportChart> {
   String formatDate(String dateString) {
     DateTime dateTime = DateTime.parse(dateString);
-    DateFormat formatter = DateFormat('dd MMM - hh:mm a');
+    DateFormat formatter = DateFormat('dd MMM');
 
     return formatter.format(dateTime);
   }
@@ -77,23 +77,28 @@ class _PeakflowReportChartState extends State<PeakflowReportChart> {
                   start: double.parse(widget
                       .baseLineScore), // Ensure base line score is parsed to double
                   end: double.parse(widget.baseLineScore),
-                  borderColor: const Color(0xFF27AE60).withOpacity(1),
+                  borderColor: const Color(0xFF27AE60),//.withOpacity(1),
                   borderWidth: 2,
                 ),
                 PlotBand(
                   start: 0,
                   end: 200,
-                  color: const Color(0xFFFD4646).withOpacity(0.4),
+                  color: const Color(0xFFD10000)
                 ),
                 PlotBand(
                   start: 200,
                   end: 400,
-                  color: const Color(0xFFFF8500).withOpacity(0.4),
+                  color: const Color(0xFFFD4646)
                 ),
                 PlotBand(
                   start: 400,
+                  end: 600,
+                  color: const Color(0xFFFF8500)
+                ),
+                PlotBand(
+                  start: 600,
                   end: 800,
-                  color: const Color(0xFF27AE60).withOpacity(0.4),
+                  color: const Color(0xFF27AE60)
                 ),
               ],
             ),

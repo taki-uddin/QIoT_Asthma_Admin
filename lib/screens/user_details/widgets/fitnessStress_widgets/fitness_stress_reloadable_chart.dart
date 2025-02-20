@@ -226,7 +226,7 @@ class FitnessStressReloadableChartState
                                   Text(
                                     '1: Low',
                                     textAlign: TextAlign.left,
-                                   
+
                                     style: GoogleFonts.manrope(
                                       color: Color(0xFF27AE60),
                                       fontSize: 14,

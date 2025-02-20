@@ -19,41 +19,39 @@ class PeakflowLegendsZone extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               _buildZoneRow(
                 screenRatio: screenRatio,
                 screenSize: screenSize,
                 color: const Color(0xFF27AE60),
-                label: 'Green Zone\n(80-100%)',
+                label: 'Green Zone(80-100%)',
               ),
-              SizedBox(height: screenSize.height * 0.01),
               _buildZoneRow(
                 screenRatio: screenRatio,
                 screenSize: screenSize,
                 color: const Color(0xFFFF8500),
-                label: 'Amber Zone\n(60-79%)',
+                label: 'Amber Zone(60-79%)',
               ),
             ],
           ),
-          SizedBox(height: screenSize.height * 0.01),
+          SizedBox(height: 10),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               _buildZoneRow(
                 screenRatio: screenRatio,
                 screenSize: screenSize,
                 color: const Color(0xFFFD4646),
-                label: 'Red Zone - Urgent\n(50-59%)',
+                label: 'Red Zone - Urgent(50-59%)',
               ),
-              SizedBox(height: screenSize.height * 0.01),
               _buildZoneRow(
                 screenRatio: screenRatio,
                 screenSize: screenSize,
                 color: const Color(0xFFD10000),
-                label: 'Red Zone - Emergency\n(<50%)',
+                label: 'Red Zone - Emergency(<50%)',
               ),
             ],
           ),
@@ -69,9 +67,9 @@ class PeakflowLegendsZone extends StatelessWidget {
     required String label,
   }) {
     return SizedBox(
-      width: screenSize.width * 0.3,
+      width: screenSize.width * 0.2, // Increased width for proper spacing
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.start, // Ensures left alignment
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
@@ -80,14 +78,16 @@ class PeakflowLegendsZone extends StatelessWidget {
             color: color,
           ),
           SizedBox(width: screenRatio * 6),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: color,
-              fontSize: 8 * screenRatio,
-              fontWeight: FontWeight.normal,
-              fontFamily: 'Roboto',
+          Expanded(
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: color,
+                fontSize: 8 * screenRatio,
+                fontWeight: FontWeight.normal,
+                fontFamily: 'Roboto',
+              ),
             ),
           ),
         ],
