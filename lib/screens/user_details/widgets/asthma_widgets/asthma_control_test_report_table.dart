@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:qiot_admin/models/asthma_control_test_report_model/asthma_control_test_report_table_model.dart';
 import 'package:qiot_admin/utils/convertToCustomFormat.dart';
 
@@ -25,7 +26,10 @@ class _AsthmaControlTestReportTableState
   Widget build(BuildContext context) {
     final Size screenSize = MediaQuery.of(context).size;
     double screenRatio = screenSize.height / screenSize.width;
-
+    String convertToCustomFormat(String dateTime) {
+      DateTime parsedDate = DateTime.parse(dateTime);
+      return DateFormat('dd/MM/yyyy hh:mm a').format(parsedDate);
+    }
     // Define column widths
     final double asthmacontroltestObservedOnWidth =
         screenSize.width * 0.3; // Adjust as needed
