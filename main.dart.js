@@ -110305,7 +110305,7 @@ au(){return new A.a2w(new A.ayi(),B.H)}}
 A.a2w.prototype={
 b0(){this.bd()
 this.pr()},
-pr(){var s=0,r=A.I(t.H),q=1,p,o=this,n,m,l,k,j,i
+pr(){var s=0,r=A.I(t.H),q=1,p,o=this,n,m,l,k,j,i,h
 var $async$pr=A.E(function(a,b){if(a===1){p=b
 s=q}while(true)switch(s){case 0:o.a_(new A.aBX(o))
 q=3
@@ -110315,7 +110315,8 @@ case 6:n=b
 s=n!=null?7:9
 break
 case 7:m=J.a0(n,"educationalPlans")
-l=o.arj(m)
+j=J.a0(n,"fileType")
+l=j==null?o.arj(m):j
 o.a_(new A.aBY(o,m,l))
 s=o.z==="PDF"?10:11
 break
@@ -110330,8 +110331,8 @@ case 8:q=1
 s=5
 break
 case 3:q=2
-i=p
-k=A.a6(i)
+h=p
+k=A.a6(h)
 o.a_(new A.aC_(o,k))
 $.an().a7(0,"Error getting file URL: "+A.e(k))
 s=5
