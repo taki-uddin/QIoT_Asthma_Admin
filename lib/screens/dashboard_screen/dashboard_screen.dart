@@ -55,8 +55,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (fileUrlData != null) {
         String fileUrl = fileUrlData['educationalPlans'];
 
-        // Determine file type from URL
-        String detectedFileType = _getFileTypeFromUrl(fileUrl);
+        // Use file type from API response if available, otherwise determine from URL
+        String detectedFileType =
+            fileUrlData['fileType'] ?? _getFileTypeFromUrl(fileUrl);
 
         setState(() {
           pdfUrl = fileUrl;
