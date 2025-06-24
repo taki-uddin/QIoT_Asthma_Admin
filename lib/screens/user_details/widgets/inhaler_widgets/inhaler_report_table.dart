@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:qiot_admin/models/inhaler_report_model/inhaler_table_model.dart';
 import 'package:qiot_admin/utils/convertToCustomFormat.dart';
 
 class InhalerReportTable extends StatefulWidget {
   final List<InhalerReportTableModel> inhalerReportTableData;
+  final int salbutomalDosage;
   const InhalerReportTable({
     super.key,
     required this.inhalerReportTableData,
+    required this.salbutomalDosage,
+    
   });
 
   @override
@@ -24,16 +28,18 @@ class _InhalerReportTableState extends State<InhalerReportTable> {
     final Size screenSize = MediaQuery.of(context).size;
     double screenRatio = screenSize.height / screenSize.width;
 
+    String convertToCustomFormat(String dateTime) {
+      DateTime parsedDate = DateTime.parse(dateTime);
+      return DateFormat('dd/MM/yyyy hh:mm a').format(parsedDate);
+    }
     // Define column widths
-    final double peakflowObservedOnWidth =
-        screenSize.width * 0.12; // Adjust as needed
-    final double peakflowHighWidth =
-        screenSize.width * 0.12; // Adjust as needed
-    final double peakflowLowWidth = screenSize.width * 0.12; // Adjust as needed
-    final double peakflowValueWidth =
-        screenSize.width * 0.12; // Adjust as needed
+    final double inhalerObservedOnWidth =
+        screenSize.width * 0.2; // Adjust as needed
+    final double inhalerHighWidth = screenSize.width * 0.2; // Adjust as needed
+    final double inhalerLowWidth = screenSize.width * 0.2; // Adjust as needed
+    final double inhalerValueWidth = screenSize.width * 0.2; // Adjust as needed
     final double dailyVariationWidth =
-        screenSize.width * 0.12; // Adjust as needed
+        screenSize.width * 0.2; // Adjust as needed
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -44,13 +50,13 @@ class _InhalerReportTableState extends State<InhalerReportTable> {
           columns: [
             DataColumn(
               label: SizedBox(
-                width: peakflowObservedOnWidth, // Set width
+                width: inhalerObservedOnWidth, // Set width
                 child: Text(
                   'Inhaler Observed On',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
                   ),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 2,
@@ -59,13 +65,13 @@ class _InhalerReportTableState extends State<InhalerReportTable> {
             ),
             DataColumn(
               label: SizedBox(
-                width: peakflowHighWidth, // Set width
+                width: inhalerHighWidth, // Set width
                 child: Text(
-                  'Inhaler High',
+                  'Salbutamol Dosage',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                     fontSize: 14,
-                      fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
                   ),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 2,
@@ -74,43 +80,13 @@ class _InhalerReportTableState extends State<InhalerReportTable> {
             ),
             DataColumn(
               label: SizedBox(
-                width: peakflowLowWidth, // Set width
+                width: inhalerValueWidth, // Set width
                 child: Text(
-                  'Inhaler Low',
+                  'Compression',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 2,
-                ),
-              ),
-            ),
-            DataColumn(
-              label: SizedBox(
-                width: peakflowValueWidth, // Set width
-                child: Text(
-                  'Inhaler Value',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                     fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 2,
-                ),
-              ),
-            ),
-            DataColumn(
-              label: SizedBox(
-                width: dailyVariationWidth, // Set width
-                child: Text(
-                  'Daily Variation',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
                   ),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 2,
@@ -119,10 +95,15 @@ class _InhalerReportTableState extends State<InhalerReportTable> {
             ),
           ],
           rows: widget.inhalerReportTableData.reversed.toList().map((data) {
+
+            // print('the value isssssssssssssssssssss');
+            // print(data.inhalerValue);
+            double  sal_dosage = double.parse(data.inhalerValue.toString()) * widget.salbutomalDosage;
+            print(widget.salbutomalDosage);
             return DataRow(cells: [
               DataCell(
                 SizedBox(
-                  width: peakflowObservedOnWidth, // Set width
+                  width: inhalerObservedOnWidth, // Set width
                   child: Text(
                     convertToCustomFormat(data.createdAt.toString()),
                     textAlign: TextAlign.center,
@@ -136,9 +117,9 @@ class _InhalerReportTableState extends State<InhalerReportTable> {
               ),
               DataCell(
                 SizedBox(
-                  width: peakflowHighWidth, // Set width
+                  width: inhalerHighWidth, // Set width
                   child: Text(
-                    data.highValue.toString(),
+                    sal_dosage.toString(),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 12,
@@ -150,49 +131,12 @@ class _InhalerReportTableState extends State<InhalerReportTable> {
               ),
               DataCell(
                 SizedBox(
-                  width: peakflowLowWidth, // Set width
-                  child: Text(
-                    data.lowValue.toString(),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 12,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 2,
-                  ),
-                ),
-              ),
-              DataCell(
-                SizedBox(
-                  width: peakflowValueWidth, // Set width
+                  width: inhalerValueWidth, // Set width
                   child: Text(
                     data.inhalerValue.toString(),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 12,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 2,
-                  ),
-                ),
-              ),
-              DataCell(
-                SizedBox(
-                  width: dailyVariationWidth, // Set width
-                  child: Text(
-                    data.dailyVariation.toString(),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: data.dailyVariation >= 80
-                          ? const Color(0xFF27AE60)
-                          : data.dailyVariation < 80 &&
-                                  data.dailyVariation >= 60
-                              ? const Color(0xFFFF8500)
-                              : data.dailyVariation < 60 &&
-                                      data.dailyVariation >= 50
-                                  ? const Color(0xFFFD4646)
-                                  : const Color(0xFFD10000),
                     ),
                     overflow: TextOverflow.ellipsis,
                     maxLines: 2,

@@ -25,7 +25,7 @@ class _FitnessReportChartState
     extends State<FitnessReportChart> {
   String formatDate(String dateString) {
     DateTime dateTime = DateTime.parse(dateString);
-    DateFormat formatter = DateFormat('dd MMM - hh:mm a');
+    DateFormat formatter = DateFormat('dd MMM');
     return formatter.format(dateTime);
   }
 

@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:qiot_admin/models/diurinal_model.dart/diurinal_table.dart';
 import 'package:qiot_admin/models/inhaler_report_model/inhaler_table_model.dart';
 import 'package:qiot_admin/models/peakflow_report_model/peakflow_report_table_model.dart';
 import 'package:qiot_admin/utils/convertToCustomFormat.dart';
 
-class PeakflowReportTable extends StatefulWidget {
-  final List<PeakflowReportTableModel> peakflowReportTableData;
-  const PeakflowReportTable({
+class DiurinalReportTable extends StatefulWidget {
+  final List<DiurinalTableModel> diurinalReportTableData;
+  const DiurinalReportTable({
     super.key,
-    required this.peakflowReportTableData,
+    required this.diurinalReportTableData,
   });
 
   @override
-  _PeakflowReportTableState createState() => _PeakflowReportTableState();
+  _DiurinalReportTableState createState() => _DiurinalReportTableState();
 }
 
-class _PeakflowReportTableState extends State<PeakflowReportTable> {
+class _DiurinalReportTableState extends State<DiurinalReportTable> {
   @override
   void initState() {
     super.initState();
@@ -25,18 +26,17 @@ class _PeakflowReportTableState extends State<PeakflowReportTable> {
   Widget build(BuildContext context) {
     final Size screenSize = MediaQuery.of(context).size;
     double screenRatio = screenSize.height / screenSize.width;
-
     String convertToCustomFormat(String dateTime) {
       DateTime parsedDate = DateTime.parse(dateTime);
       return DateFormat('dd/MM/yyyy hh:mm a').format(parsedDate);
     }
     // Define column widths
-    final double peakflowObservedOnWidth =
+    final double diurinalObservedOnWidth =
         screenSize.width * 0.12; // Adjust as needed
-    final double peakflowHighWidth =
+    final double diurinalHighWidth =
         screenSize.width * 0.12; // Adjust as needed
-    final double peakflowLowWidth = screenSize.width * 0.12; // Adjust as needed
-    final double peakflowValueWidth =
+    final double diurinalLowWidth = screenSize.width * 0.12; // Adjust as needed
+    final double diurinalValueWidth =
         screenSize.width * 0.12; // Adjust as needed
     final double dailyVariationWidth =
         screenSize.width * 0.12; // Adjust as needed
@@ -51,9 +51,9 @@ class _PeakflowReportTableState extends State<PeakflowReportTable> {
             DataColumn(
               label: Container(
                 child: SizedBox(
-                  width: peakflowObservedOnWidth, // Set width
+                  width: diurinalObservedOnWidth, // Set width
                   child: Text(
-                    'Peakflow Observed On',
+                    'diurinal Observed On',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14,
@@ -67,9 +67,9 @@ class _PeakflowReportTableState extends State<PeakflowReportTable> {
             ),
             DataColumn(
               label: SizedBox(
-                width: peakflowHighWidth, // Set width
+                width: diurinalHighWidth, // Set width
                 child: Text(
-                  'Peakflow High',
+                  'Diurinal High',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       fontSize: 14,
@@ -82,9 +82,9 @@ class _PeakflowReportTableState extends State<PeakflowReportTable> {
             ),
             DataColumn(
               label: SizedBox(
-                width: peakflowLowWidth, // Set width
+                width: diurinalLowWidth, // Set width
                 child: Text(
-                  'Peakflow Low',
+                  'Diurinal Low',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       fontSize: 14,
@@ -97,9 +97,9 @@ class _PeakflowReportTableState extends State<PeakflowReportTable> {
             ),
             DataColumn(
               label: SizedBox(
-                width: peakflowValueWidth, // Set width
+                width: diurinalValueWidth, // Set width
                 child: Text(
-                  'Peakflow Value',
+                  'Daily Mean Value',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       fontSize: 14,
@@ -126,11 +126,11 @@ class _PeakflowReportTableState extends State<PeakflowReportTable> {
               ),
             ),
           ],
-          rows: widget.peakflowReportTableData.reversed.toList().map((data) {
+          rows: widget.diurinalReportTableData.reversed.toList().map((data) {
             return DataRow(cells: [
               DataCell(
                 SizedBox(
-                  width: peakflowObservedOnWidth, // Set width
+                  width: diurinalObservedOnWidth, // Set width
                   child: Text(
                     convertToCustomFormat(data.createdAt.toString()),
                     textAlign: TextAlign.center,
@@ -144,7 +144,7 @@ class _PeakflowReportTableState extends State<PeakflowReportTable> {
               ),
               DataCell(
                 SizedBox(
-                  width: peakflowHighWidth, // Set width
+                  width: diurinalHighWidth, // Set width
                   child: Text(
                     data.highValue.toString(),
                     textAlign: TextAlign.center,
@@ -158,7 +158,7 @@ class _PeakflowReportTableState extends State<PeakflowReportTable> {
               ),
               DataCell(
                 SizedBox(
-                  width: peakflowLowWidth, // Set width
+                  width: diurinalLowWidth, // Set width
                   child: Text(
                     data.lowValue.toString(),
                     textAlign: TextAlign.center,
@@ -172,9 +172,9 @@ class _PeakflowReportTableState extends State<PeakflowReportTable> {
               ),
               DataCell(
                 SizedBox(
-                  width: peakflowValueWidth, // Set width
+                  width: diurinalValueWidth, // Set width
                   child: Text(
-                    data.peakflowValue.toString(),
+                    data.dailyMean.toString(),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 12,
@@ -188,17 +188,17 @@ class _PeakflowReportTableState extends State<PeakflowReportTable> {
                 SizedBox(
                   width: dailyVariationWidth, // Set width
                   child: Text(
-                    data.dailyVariation.toString(),
+                    data.dailyVariation!.toStringAsFixed(2),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 12,
-                      color: data.dailyVariation >= 80
+                      color: data.dailyVariation! >= 80
                           ? const Color(0xFF27AE60)
-                          : data.dailyVariation < 80 &&
-                                  data.dailyVariation >= 60
+                          : data.dailyVariation! < 80 &&
+                                  data.dailyVariation! >= 60
                               ? const Color(0xFFFF8500)
-                              : data.dailyVariation < 60 &&
-                                      data.dailyVariation >= 50
+                              : data.dailyVariation! < 60 &&
+                                      data.dailyVariation! >= 50
                                   ? const Color(0xFFFD4646)
                                   : const Color(0xFFD10000),
                     ),

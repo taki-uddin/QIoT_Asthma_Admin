@@ -10,16 +10,22 @@ import 'package:qiot_admin/constants/web_colors.dart';
 import 'package:qiot_admin/main.dart';
 import 'package:qiot_admin/models/asthma_control_test_report_model/asthma_control_test_report_chart_model.dart';
 import 'package:qiot_admin/models/asthma_control_test_report_model/asthma_control_test_report_table_model.dart';
+import 'package:qiot_admin/models/diurinal_model.dart/diurinal_chart.dart';
+import 'package:qiot_admin/models/diurinal_model.dart/diurinal_table.dart';
 import 'package:qiot_admin/models/fitness_stress_report_model/stress_fitness_report_model.dart';
 import 'package:qiot_admin/models/inhaler_report_model/inhaler_chart_model.dart';
 import 'package:qiot_admin/models/inhaler_report_model/inhaler_table_model.dart';
 import 'package:qiot_admin/models/peakflow_report_model/peakflow_report_chart_model.dart';
 import 'package:qiot_admin/models/peakflow_report_model/peakflow_report_table_model.dart';
 import 'package:qiot_admin/helpers/pdf.dart/pdfgeneration.dart';
+import 'package:qiot_admin/models/steroid_dose_model/steroid_dose_chart.dart';
+import 'package:qiot_admin/models/steroid_dose_model/steroid_dose_table.dart';
 import 'package:qiot_admin/screens/user_details/widgets/asthma_widgets/act_legends_zone.dart';
 import 'package:qiot_admin/screens/user_details/widgets/asthma_widgets/asthma_control_test_report_table.dart';
 import 'package:qiot_admin/screens/user_details/widgets/asthma_widgets/asthma_reloadable_chart.dart';
 import 'package:qiot_admin/screens/user_details/widgets/button_tab_widget.dart';
+import 'package:qiot_admin/screens/user_details/widgets/diurinal_widgets/diurinal_reloadable.dart';
+import 'package:qiot_admin/screens/user_details/widgets/diurinal_widgets/diurinal_widget_table.dart';
 import 'package:qiot_admin/screens/user_details/widgets/fitnessStress_widgets/fitness_stress_reloadable_chart.dart';
 import 'package:qiot_admin/screens/user_details/widgets/fitnessStress_widgets/fitness_stress_report_table.dart';
 import 'package:qiot_admin/screens/user_details/widgets/fitnessStress_widgets/fitnessstress_legends_zone.dart';
@@ -29,6 +35,8 @@ import 'package:qiot_admin/screens/user_details/widgets/inhaler_widgets/reloadab
 import 'package:qiot_admin/screens/user_details/widgets/peakflow_widgets/peakflow_legends_zone.dart';
 import 'package:qiot_admin/screens/user_details/widgets/peakflow_widgets/peakflow_report_table.dart';
 import 'package:qiot_admin/screens/user_details/widgets/peakflow_widgets/reloadable_chart.dart';
+import 'package:qiot_admin/screens/user_details/widgets/steroid_widgets/steroiddose_reloadable_chart.dart';
+import 'package:qiot_admin/screens/user_details/widgets/steroid_widgets/steroiddose_report_table.dart';
 import 'package:qiot_admin/services/api/dashboard_users_data.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -47,6 +55,7 @@ class _UserDetailsState extends State<UserDetails> {
   Map<String, dynamic> userData = {};
   bool hasData = false;
   String userId = '';
+  String type = 'Daily';
 
   List<dynamic> peakflowReportHistory = [];
   Map<String, dynamic> peakflowReportData = {};
@@ -59,9 +68,21 @@ class _UserDetailsState extends State<UserDetails> {
   List<InhalerReportChartModel> inhalerReportChartData = [];
   List<InhalerReportTableModel> inhalerReportTableData = [];
 
+  List<dynamic> asthmaReportHistory = [];
   Map<String, dynamic> asthmacontroltestReportData = {};
   List<AsthmaControlTestReportChartModel> asthmacontroltestReportChartData = [];
   List<AsthmaControlTestReportTableModel> asthmacontroltestReportTableData = [];
+
+  List<dynamic> steroidReportHistory = [];
+  Map<String, dynamic> steroidReportData = {};
+  List<SteroidDoseChartModel> steroidReportChartData = [];
+  List<SteroidDoseTableModel> steroidReportTableData = [];
+
+  List<dynamic> diurinalReportHistory = [];
+  Map<String, dynamic> diurinalReportData = {};
+  List<DiurinalChartXModel> diurinalReportChartDataxaxis = [];
+  List<DiurinalChartYModel> diurinalReportChartDatayaxis = [];
+  List<DiurinalTableModel> diurinalReportTableData = [];
 
   List<dynamic> fitnessStressReportHistory = [];
   Map<String, dynamic> fitnessstressReportData = {};
@@ -81,6 +102,7 @@ class _UserDetailsState extends State<UserDetails> {
   bool inhaler = false;
   bool diurinal = false;
   bool fitnessStress = false;
+
 
   @override
   void initState() {
@@ -216,6 +238,7 @@ class _UserDetailsState extends State<UserDetails> {
 
     try {
       DashboardUsersData.getPeakflowhistoryReport(
+        context,
         userId,
         _selectedStartDate?.month ?? int.parse(DateTime.now().month.toString()),
         _selectedStartDate?.year ?? int.parse(DateTime.now().year.toString()),
@@ -325,6 +348,85 @@ class _UserDetailsState extends State<UserDetails> {
     }
   }
 
+  Future<void> _getDiurinalHistoryReport() async {
+    logger.d('Current Month: $currentMonth, Current Year: $currentYear');
+
+    if (_selectedStartDate != null && _selectedEndDate != null) {
+      if (_selectedEndDate!.year < _selectedStartDate!.year ||
+          (_selectedEndDate!.year == _selectedStartDate!.year &&
+              _selectedEndDate!.month < _selectedStartDate!.month)) {
+        _showErrorDialog('Error retrieving data, please verify the dates.');
+        return;
+      }
+    }
+    try {
+      DashboardUsersData.getDiurinalhistoryReport(
+        context,
+        userId,
+        _selectedStartDate?.month ?? int.parse(DateTime.now().month.toString()),
+        _selectedStartDate?.year ?? int.parse(DateTime.now().year.toString()),
+        type,
+        _selectedEndDate?.month ?? int.parse(DateTime.now().month.toString()),
+        _selectedEndDate?.year ?? int.parse(DateTime.now().year.toString()),
+      ).then(
+        (value) async {
+          if (value != null) {
+            // logger.d('value: ${value['payload']}');
+            setState(() {
+              diurinalReportHistory = value['payload']['diurnalData'];
+            });
+            logger.d('Diurinal report: ${diurinalReportHistory.toString()}');
+            await generatePDFReport(diurinalReportHistory,
+                'Diurinal History Report', 'Diurinal Data', 'diurinal');
+          } else {
+            logger.d('Failed to get user data');
+          }
+        },
+      );
+    } on Exception catch (e) {
+      logger.e('Failed to fetch data: $e');
+    }
+  }
+
+  Future<void> _getSteroidHistoryReport() async {
+    logger.d('Current Month: $currentMonth, Current Year: $currentYear');
+
+    if (_selectedStartDate != null && _selectedEndDate != null) {
+      if (_selectedEndDate!.year < _selectedStartDate!.year ||
+          (_selectedEndDate!.year == _selectedStartDate!.year &&
+              _selectedEndDate!.month < _selectedStartDate!.month)) {
+        _showErrorDialog('Error retrieving data, please verify the dates.');
+        return;
+      }
+    }
+    try {
+      DashboardUsersData.getSteroidhistoryReport(
+        context,
+        userId,
+        _selectedStartDate?.month ?? int.parse(DateTime.now().month.toString()),
+        _selectedStartDate?.year ?? int.parse(DateTime.now().year.toString()),
+        _selectedEndDate?.month ?? int.parse(DateTime.now().month.toString()),
+        _selectedEndDate?.year ?? int.parse(DateTime.now().year.toString()),
+      ).then(
+        (value) async {
+          if (value != null) {
+            // logger.d('value: ${value['payload']}');
+            setState(() {
+              steroidReportHistory = value['payload']['steroid'];
+            });
+            logger.d('Steroid report: ${steroidReportHistory.toString()}');
+            await generatePDFReport(steroidReportHistory, 'Steroid Report',
+                'Steroid Dosage', 'steroid');
+          } else {
+            logger.d('Failed to get user data');
+          }
+        },
+      );
+    } on Exception catch (e) {
+      logger.e('Failed to fetch data: $e');
+    }
+  }
+
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
@@ -348,6 +450,7 @@ class _UserDetailsState extends State<UserDetails> {
   Future<void> generatePDFReport(
       List<dynamic> report, String header, String value, String type) async {
     final pdf = pw.Document();
+    
 
     // Create a header for the PDF
     pw.Widget _buildHeader() {
@@ -389,37 +492,106 @@ class _UserDetailsState extends State<UserDetails> {
               headerAlignment: pw.Alignment.center,
               cellAlignment: pw.Alignment.center,
             )
-          : pw.TableHelper.fromTextArray(
-              context: null,
-              data: [
-                ...data
-                    .map((entry) => [
-                          entry['createdAt'].toString(),
-                          type == 'peakflow'
-                              ? entry['peakflowValue'].toString()
-                              : type == 'inhaler'
-                                  ? entry['inhalerValue'].toString()
-                                  : "No data",
-                          '${entry['dailyVariation'].toStringAsFixed(2)}%',
-                          entry['highValue'].toString(),
-                          entry['lowValue'].toString(),
-                          entry['averageValue'].toString()
-                        ])
-                    .toList()
-              ],
-              headers: [
-                'Date',
-                value,
-                'Daily Variation',
-                'High Value',
-                'Low Value',
-                'Average'
-              ],
-              headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-              cellStyle: pw.TextStyle(fontSize: 10),
-              headerAlignment: pw.Alignment.center,
-              cellAlignment: pw.Alignment.center,
-            );
+          : type == 'steroid'
+              ? pw.TableHelper.fromTextArray(
+                  context: null,
+                  data: [
+                    ...data
+                        .map((entry) => [
+                              entry['createdAt'].toString(),
+                              entry['steroidDoseValue'].toString(),
+                            ])
+                        .toList()
+                  ],
+                  headers: [
+                    'Date',
+                    'Steroid Dsosage Value',
+                  ],
+                  headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                  cellStyle: pw.TextStyle(fontSize: 10),
+                  headerAlignment: pw.Alignment.center,
+                  cellAlignment: pw.Alignment.center,
+                )
+              : type == 'diurinal'
+                  ? pw.TableHelper.fromTextArray(
+                      context: null,
+                      data: [
+                        ...data
+                            .map((entry) => [
+                                  entry['createdAt'].toString(),
+                                  entry['highvalue'].toString(),
+                                  entry['lowvalue'].toString(),
+                                  entry['DailyMean'].toString(),
+                                  entry['DailyVariation'].toString(),
+                                  // entry['dailyVariation'].toString()
+                                ])
+                            .toList()
+                      ],
+                      headers: [
+                        'Date',
+                        'High Value',
+                        'Low Value',
+                        'Daily Mean',
+                        'Daily Variation',
+                      ],
+                      headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                      cellStyle: pw.TextStyle(fontSize: 10),
+                      headerAlignment: pw.Alignment.center,
+                      cellAlignment: pw.Alignment.center,
+                    )
+                  : type == 'asthma'
+                      ? pw.TableHelper.fromTextArray(
+                          context: null,
+                          data: [
+                            ...data
+                                .map((entry) => [
+                                      entry['createdAt'].toString(),
+                                      entry['actScore'].toString(),
+                                    ])
+                                .toList()
+                          ],
+                          headers: [
+                            'Date',
+                            'ACT Score',
+                          ],
+                          headerStyle:
+                              pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                          cellStyle: pw.TextStyle(fontSize: 10),
+                          headerAlignment: pw.Alignment.center,
+                          cellAlignment: pw.Alignment.center,
+                        )
+                      : pw.TableHelper.fromTextArray(
+                          context: null,
+                          data: [
+                            ...data
+                                .map((entry) => [
+                                      entry['createdAt'].toString(),
+                                      type == 'peakflow'
+                                          ? entry['peakflowValue'].toString()
+                                          : type == 'inhaler'
+                                              ? entry['inhalerValue'].toString()
+                                              : "No data",
+                                      '${entry['dailyVariation'].toStringAsFixed(2)}%',
+                                      entry['highValue'].toString(),
+                                      entry['lowValue'].toString(),
+                                      entry['averageValue'].toString()
+                                    ])
+                                .toList()
+                          ],
+                          headers: [
+                            'Date',
+                            value,
+                            'Daily Variation',
+                            'High Value',
+                            'Low Value',
+                            'Average'
+                          ],
+                          headerStyle:
+                              pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                          cellStyle: pw.TextStyle(fontSize: 10),
+                          headerAlignment: pw.Alignment.center,
+                          cellAlignment: pw.Alignment.center,
+                        );
     }
 
     //pdf making
@@ -495,98 +667,143 @@ class _UserDetailsState extends State<UserDetails> {
     }
   }
 
-  // Future<void> _getFitnessStressHistory(
-  //     int currentMonth, int currentYear) async {
-  //   logger.d('Current Month: $currentMonth, Current Year: $currentYear');
-  //   try {
-  //     fitnessstressReportChartData.clear();
-  //     fitnessstressReportTableData.clear();
-  //     DashboardUsersData.getFitnessStresshistories(
-  //       userId,
-  //       currentMonth,
-  //       currentYear,
-  //     ).then(
-  //       (value) async {
-  //         if (value != null) {
-  //           logger.d('value: ${value['payload']}');
-  //           setState(() {
-  //             fitnessstressReportData = value['payload'];
-  //           });
-  //           for (var i in fitnessstressReportData['fitnessandstress']) {
-  //             fitnessstressReportChartData.add(
-  //               FitnessStressReportModel(
-  //                   i['createdAt'], i['fitness'], i['stress']),
-  //             );
-  //             fitnessstressReportTableData.add(
-  //               FitnessStressReportModel(
-  //                   i['createdAt'], i['fitness'], i['stress']),
-  //             );
-  //           }
-  //         } else {
-  //           logger.d('Failed to get user data');
-  //         }
-  //       },
-  //     );
-  //   } on Exception catch (e) {
-  //     logger.e('Failed to fetch data: $e');
-  //   }
-  // }
+  Future<void> _getasthmaHistoryReport() async {
+    logger.d('Current Month: $currentMonth, Current Year: $currentYear');
 
-  // Future<void> _getFitnessStressHistory(
-  //     int currentMonth, int currentYear) async {
-  //   logger.d('Current Month: $currentMonth, Current Year: $currentYear');
+    if (_selectedStartDate != null && _selectedEndDate != null) {
+      if (_selectedEndDate!.year < _selectedStartDate!.year ||
+          (_selectedEndDate!.year == _selectedStartDate!.year &&
+              _selectedEndDate!.month < _selectedStartDate!.month)) {
+        _showErrorDialog('Error retrieving data, please verify the dates.');
+        return;
+      }
+    }
+    try {
+      DashboardUsersData.getAsthmahistoryReport(
+        context,
+        userId,
+        _selectedStartDate?.month ?? int.parse(DateTime.now().month.toString()),
+        _selectedStartDate?.year ?? int.parse(DateTime.now().year.toString()),
+        _selectedEndDate?.month ?? int.parse(DateTime.now().month.toString()),
+        _selectedEndDate?.year ?? int.parse(DateTime.now().year.toString()),
+      ).then(
+        (value) async {
+          if (value != null) {
+            // logger.d('value: ${value['payload']}');
+            setState(() {
+              asthmaReportHistory = value['payload']['asthma'];
+            });
+            logger.d('asthma report: ${asthmaReportHistory.toString()}');
+            await generatePDFReport(asthmaReportHistory, 'Asthma Report',
+                'Asthma Values', 'asthma');
+          } else {
+            logger.d('Failed to get user data');
+          }
+        },
+      );
+    } on Exception catch (e) {
+      logger.e('Failed to fetch data: $e');
+    }
+  }
 
-  //   print('entered here ');
+  Future<void> _getSteroidHistory(int currentMonth, int currentYear) async {
+    logger.d('Current Month: $currentMonth, Current Year: $currentYear');
+    try {
+      steroidReportChartData.clear();
+      steroidReportTableData.clear();
+      DashboardUsersData.getSteroidhistories(
+        userId,
+        currentMonth,
+        currentYear,
+      ).then(
+        (value) async {
+          print(value);
 
-  //   try {
-  //     print('entered here as well');
-  //     setState(() {
-  //       fitnessstressReportChartData.clear();
-  //       fitnessstressReportTableData.clear();
-  //     });
+          print('API Response: $value');
+          print('Payload: ${value?['payload']}');
+          if (value != null) {
+            logger.d('value: ${value['payload']}');
+            setState(() {
+              steroidReportData = value['payload'];
+            });
+            for (var i in steroidReportData['steroiddose']) {
+              steroidReportChartData.add(
+                SteroidDoseChartModel(
+                  i['createdAt'],
+                  i['steroidDoseValue'],
+                ),
+              );
+              steroidReportTableData.add(
+                SteroidDoseTableModel(
+                  i['createdAt'],
+                  i['steroidDoseValue'],
+                ),
+              );
+            }
+          } else {
+            logger.d('Failed to get user data');
+          }
+        },
+      );
+    } on Exception catch (e) {
+      logger.e('Failed to fetch data: $e');
+    }
+  }
 
-  //     final value = await DashboardUsersData.getFitnessStresshistories(
-  //       userId,
-  //       currentMonth,
-  //       currentYear,
-  //     );
+  Future<void> _getDiurinalHistory(int currentMonth, int currentYear) async {
+    logger.d('Current Month: $currentMonth, Current Year: $currentYear');
+    try {
+      // peakflowReportChartData.clear();
+      // peakflowReportTableData.clear();
+      // inhalerReportChartData.clear();
+      // inhalerReportTableData.clear();
+      diurinalReportChartDataxaxis.clear();
+      diurinalReportChartDatayaxis.clear();
+      diurinalReportTableData.clear();
+      DashboardUsersData.getdiurinalhistories(
+              userId, currentMonth, currentYear, type)
+          .then(
+        (value) async {
+          if (value != null) {
+            // logger.d('value: ${value['payload']}');
+            setState(() {
+              diurinalReportData = value['payload'];
+            });
+            for (var i in diurinalReportData['x_Axis']) {
+              diurinalReportChartDataxaxis.add(DiurinalChartXModel(date: i));
+            }
+            for (var i in diurinalReportData['y_Axis']) {
+              diurinalReportChartDatayaxis.add(DiurinalChartYModel(value: i));
+            }
 
-  //     print('the vlaue issssssss');
-  //     print(value);
-
-  //     print('API Response: $value');
-  //     print('Payload: ${value?['payload']}');
-  //     print('Fitness Data: ${value?['payload']['fitnessandstress']}');
-
-  //     if (value == null || value['payload'] == null) {
-  //       logger.d('Failed to get user user user  data');
-  //       return;
-  //     }
-
-  //     setState(() {
-  //       fitnessstressReportData = value['payload'];
-
-  //       final fitnessData = fitnessstressReportData['fitnessandstress'] ?? [];
-
-  //       print('Fitness and Stress Data: $fitnessData');
-  //       for (var i in fitnessData) {
-  //         print('Record: $i');
-  //       }
-
-  //       for (var i in fitnessData) {
-  //         final model = FitnessStressReportModel(
-  //           i['createdAt'] ?? '',
-  //           i['fitness'] ?? 'No data',
-  //           i['stress'] ?? 'No data',
-  //         );
-  //         fitnessstressReportChartData.add(model);
-  //         fitnessstressReportTableData.add(model);
-  //       }
-  //     });
-  //   } catch (e) {
-  //     logger.e('Failed to fetch data: $e');
-  //   }
-  // }
+            for (var i in diurinalReportData['DiurinalVariation']) {
+              // inhalerReportChartData.add(
+              //   InhalerReportChartModel(
+              //     i['createdAt'],
+              //     i['inhalerValue'],
+              //   ),
+              // );
+              diurinalReportTableData.add(
+                DiurinalTableModel(
+                  i['highvalue'],
+                  i['lowvalue'],
+                  i['createdAt'],
+                  double.tryParse(i['DailyMean'].toString()) ?? 0.0,
+                  // i['DailyMean'],
+                  double.tryParse(i['DailyVariation'].toString()) ?? 0.0,
+                ),
+              );
+            }
+            print('the added data is:');
+          } else {
+            logger.d('Failed to get user data');
+          }
+        },
+      );
+    } on Exception catch (e) {
+      logger.e('Failed to fetch data: $e');
+    }
+  }
 
   Future<void> _getFitnessStressHistory(
       int currentMonth, int currentYear) async {
@@ -621,11 +838,10 @@ class _UserDetailsState extends State<UserDetails> {
           try {
             print('Processing record: $i');
 
-            // Ensure all fields have default values if null
             final model = FitnessStressReportModel(
-              i['createdAt'] ?? '', // Default empty string if null
-              i['fitness'] ?? 'No Data', // Default to 'No Data' if null
-              i['stress'] ?? 'No Data', // Default to 'No Data' if null
+              i['createdAt'] ?? '',
+              i['fitness'] ?? 'No Data',
+              i['stress'] ?? 'No Data',
             );
 
             fitnessstressReportChartData.add(model);
@@ -650,6 +866,8 @@ class _UserDetailsState extends State<UserDetails> {
         currentMonth = 12;
         currentYear -= 1;
       }
+      _selectedStartDate = DateTime(currentYear, currentMonth);
+      _selectedEndDate = DateTime(currentYear, currentMonth);
     });
     _getPeakflowHistory(currentMonth, currentYear);
   }
@@ -664,8 +882,44 @@ class _UserDetailsState extends State<UserDetails> {
         currentMonth = 12;
         currentYear -= 1;
       }
+      _selectedStartDate = DateTime(currentYear, currentMonth);
+      _selectedEndDate = DateTime(currentYear, currentMonth);
     });
     _getACTHistory(currentMonth, currentYear);
+  }
+
+  void getPrevMonthSteroid() {
+    setState(() {
+      steroidReportChartData.clear();
+      steroidReportTableData.clear();
+
+      currentMonth -= 1;
+      if (currentMonth == 0) {
+        currentMonth = 12;
+        currentYear -= 1;
+      }
+      _selectedStartDate = DateTime(currentYear, currentMonth);
+      _selectedEndDate = DateTime(currentYear, currentMonth);
+    });
+    _getSteroidHistory(currentMonth, currentYear);
+  }
+
+  void getPrevMonthDiurinal() {
+    setState(() {
+      diurinalReportChartDataxaxis.clear();
+      diurinalReportChartDatayaxis.clear();
+      diurinalReportTableData.clear();
+
+      currentMonth -= 1;
+      if (currentMonth == 0) {
+        currentMonth = 12;
+        currentYear -= 1;
+      }
+
+      _selectedStartDate = DateTime(currentYear, currentMonth);
+      _selectedEndDate = DateTime(currentYear, currentMonth);
+    });
+    _getDiurinalHistory(currentMonth, currentYear);
   }
 
   void getPrevMonthFitnessStress() {
@@ -678,6 +932,8 @@ class _UserDetailsState extends State<UserDetails> {
         currentMonth = 12;
         currentYear -= 1;
       }
+      _selectedStartDate = DateTime(currentYear, currentMonth);
+      _selectedEndDate = DateTime(currentYear, currentMonth);
     });
     _getFitnessStressHistory(currentMonth, currentYear);
   }
@@ -691,6 +947,8 @@ class _UserDetailsState extends State<UserDetails> {
         currentMonth = 12;
         currentYear -= 1;
       }
+      _selectedStartDate = DateTime(currentYear, currentMonth);
+      _selectedEndDate = DateTime(currentYear, currentMonth);
     });
     _getInhalerHistory(currentMonth, currentYear);
   }
@@ -706,6 +964,8 @@ class _UserDetailsState extends State<UserDetails> {
         currentMonth = 1;
         currentYear += 1;
       }
+      _selectedStartDate = DateTime(currentYear, currentMonth);
+      _selectedEndDate = DateTime(currentYear, currentMonth);
     });
     _getPeakflowHistory(currentMonth, currentYear);
   }
@@ -719,6 +979,8 @@ class _UserDetailsState extends State<UserDetails> {
         currentMonth = 1;
         currentYear += 1;
       }
+      _selectedStartDate = DateTime(currentYear, currentMonth);
+      _selectedEndDate = DateTime(currentYear, currentMonth);
     });
     _getInhalerHistory(currentMonth, currentYear);
   }
@@ -732,9 +994,48 @@ class _UserDetailsState extends State<UserDetails> {
         currentMonth = 1;
         currentYear += 1;
       }
+      _selectedStartDate = DateTime(currentYear, currentMonth);
+      _selectedEndDate = DateTime(currentYear, currentMonth);
+
       asthmacontroltestReportData['asthamcontroltestRecordedOn'];
     });
     _getACTHistory(currentMonth, currentYear);
+  }
+
+  void getNextMonthSteroid() {
+    setState(() {
+      steroidReportChartData.clear();
+      steroidReportTableData.clear();
+      currentMonth += 1;
+      if (currentMonth == 13) {
+        currentMonth = 1;
+        currentYear += 1;
+      }
+      _selectedStartDate = DateTime(currentYear, currentMonth);
+      _selectedEndDate = DateTime(currentYear, currentMonth);
+
+      steroidReportData['steroiddoseRecordedOn'];
+    });
+    _getSteroidHistory(currentMonth, currentYear);
+  }
+
+  void getNextMonthDiurinal() {
+    setState(() {
+      diurinalReportChartDataxaxis.clear();
+      diurinalReportChartDatayaxis.clear();
+      diurinalReportTableData.clear();
+
+      currentMonth += 1;
+      if (currentMonth == 13) {
+        currentMonth = 1;
+        currentYear += 1;
+      }
+      _selectedStartDate = DateTime(currentYear, currentMonth);
+      _selectedEndDate = DateTime(currentYear, currentMonth);
+
+      steroidReportData['steroiddoseRecordedOn'];
+    });
+    _getDiurinalHistory(currentMonth, currentYear);
   }
 
   void getNextMonthFitness() {
@@ -747,26 +1048,12 @@ class _UserDetailsState extends State<UserDetails> {
         currentMonth = 1;
         currentYear += 1;
       }
+      _selectedStartDate = DateTime(currentYear, currentMonth);
+      _selectedEndDate = DateTime(currentYear, currentMonth);
     });
     _getFitnessStressHistory(currentMonth, currentYear);
   }
 
-  // Future<void> _selectStartDate(BuildContext context) async {
-  //   DateTime? pickedDate = await showDatePicker(
-  //     context: context,
-  //     initialDate: DateTime.now(), // Default selection
-  //     firstDate: DateTime(2000), // Minimum date
-  //     lastDate: DateTime(2100), // Maximum date
-  //   );
-
-  //   // If the user selected a date, update the state
-  //   if (pickedDate != null && pickedDate != _selectedStartDate) {
-  //     setState(() {
-  //       _selectedStartDate = pickedDate;
-  //     });
-  //     logger.d('${_selectedStartDate?.month} ${_selectedStartDate?.year}');
-  //   }
-  // }
   Future<void> _selectStartDate(BuildContext context) async {
     showDialog(
       context: context,
@@ -815,23 +1102,6 @@ class _UserDetailsState extends State<UserDetails> {
       },
     );
   }
-
-  // Future<void> _selectEndDate(BuildContext context) async {
-  //   DateTime? pickedDate = await showDatePicker(
-  //     context: context,
-  //     initialDate: DateTime.now(), // Default selection
-  //     firstDate: DateTime(2000), // Minimum date
-  //     lastDate: DateTime(2100), // Maximum date
-  //   );
-
-  //   // If the user selected a date, update the state
-  //   if (pickedDate != null && pickedDate != _selectedEndDate) {
-  //     setState(() {
-  //       _selectedEndDate = pickedDate;
-  //     });
-  //     logger.d('${_selectedEndDate?.month} ${_selectedEndDate?.year}');
-  //   }
-  // }
 
   Future<void> _selectEndDate(BuildContext context) async {
     showDialog(
@@ -992,19 +1262,18 @@ class _UserDetailsState extends State<UserDetails> {
                                         ? const Color(0xFFFFFFFF)
                                         : const Color(0xFFFF8500),
                                     value: userData['steroidDosage'],
-                                    // onTap: () {
-                                    //   _getPeakflowHistory(
-                                    //       currentMonth, currentYear);
-                                    //   setState(() {
-                                    //     peakflow = false;
-                                    //     asthma = false;
-                                    //     steroid = true;
-                                    //     inhaler = false;
-                                    //     diurinal = false;
-                                    //     fitnessStress = false;
-                                    //   });
-                                    // },
-                                    onTap: () {},
+                                    onTap: () {
+                                      _getSteroidHistory(
+                                          currentMonth, currentYear);
+                                      setState(() {
+                                        peakflow = false;
+                                        asthma = false;
+                                        steroid = true;
+                                        inhaler = false;
+                                        diurinal = false;
+                                        fitnessStress = false;
+                                      });
+                                    },
                                     screenRatio:
                                         screenSize.width / screenSize.height,
                                   ),
@@ -1048,21 +1317,19 @@ class _UserDetailsState extends State<UserDetails> {
                                     //     ? const Color(0xFFFFFFFF)
                                     //     : const Color(0xFFFD4646),
                                     // value: userData['steroidDosage'],
-                                    value: '',
-                                    inhaler: true,
-                                    // onTap: () {
-                                    //   _getPeakflowHistory(
-                                    //       currentMonth, currentYear);
-                                    //   setState(() {
-                                    //     peakflow = false;
-                                    //     asthma = false;
-                                    //     steroid = false;
-                                    //     inhaler = false;
-                                    //     diurinal = true;
-                                    //     fitnessStress = false;
-                                    //   });
-                                    // },
-                                    onTap: () {},
+                                    value: 'No data',
+                                    onTap: () {
+                                      _getDiurinalHistory(
+                                          currentMonth, currentYear);
+                                      setState(() {
+                                        peakflow = false;
+                                        asthma = false;
+                                        steroid = false;
+                                        inhaler = false;
+                                        diurinal = true;
+                                        fitnessStress = false;
+                                      });
+                                    },
                                     screenRatio:
                                         screenSize.width / screenSize.height,
                                   ),
@@ -1077,6 +1344,7 @@ class _UserDetailsState extends State<UserDetails> {
                                     onTap: () {
                                       _getFitnessStressHistory(
                                           currentMonth, currentYear);
+
                                       setState(() {
                                         // showDrainageRate = true;
                                         // showRespiratoryRate = false;
@@ -1121,22 +1389,32 @@ class _UserDetailsState extends State<UserDetails> {
                                               ? dataRecordText(
                                                   text: 'Peakflow Recorded on:',
                                                 )
-                                              : inhaler
+                                              : steroid
                                                   ? dataRecordText(
                                                       text:
-                                                          'Inhaler Recorded on:',
+                                                          'Steroid Recorded on:',
                                                     )
-                                                  : asthma
+                                                  : inhaler
                                                       ? dataRecordText(
                                                           text:
-                                                              'Asthma Recorded on:',
+                                                              'Inhaler Recorded on:',
                                                         )
-                                                      : fitnessStress
+                                                      : diurinal
                                                           ? dataRecordText(
                                                               text:
-                                                                  'F and S Recorded on:',
-                                                            )
-                                                          : Text('data'),
+                                                                  'Diurinal Recorded on:')
+                                                          : asthma
+                                                              ? dataRecordText(
+                                                                  text:
+                                                                      'Asthma Recorded on:',
+                                                                )
+                                                              : fitnessStress
+                                                                  ? dataRecordText(
+                                                                      text:
+                                                                          'F and S Recorded on:',
+                                                                    )
+                                                                  : Text(
+                                                                      'data'),
                                         ),
                                         Container(
                                           // width: screenSize.width * 0.14,
@@ -1150,21 +1428,26 @@ class _UserDetailsState extends State<UserDetails> {
                                                   ? peakflowReportData[
                                                           'peakflowRecordedOn'] ??
                                                       'No data'
-                                                  : inhaler
-                                                      ? inhalerReportData[
-                                                              'inhalerRecordedOn'] ??
-                                                          "No data"
-                                                      : asthma
-                                                          ? asthmacontroltestReportData[
-                                                                  'asthamcontroltestRecordedOn'] ??
+                                                  : steroid
+                                                      ? steroidReportData[
+                                                              'steroiddoseRecordedOn'] ??
+                                                          'No data'
+                                                      :diurinal ?
+                                                         diurinalReportData['diurinalRecordedOn'] ?? 'No data':
+                                                      
+                                                      inhaler
+                                                          ? inhalerReportData[
+                                                                  'inhalerRecordedOn'] ??
                                                               "No data"
-                                                          : fitnessStress
-                                                              ? fitnessstressReportData[
-                                                                      'fitnessandstressRecordedOn'] ??
+                                                          : asthma
+                                                              ? asthmacontroltestReportData[
+                                                                      'asthamcontroltestRecordedOn'] ??
                                                                   "No data"
-                                                              : peakflowReportData[
-                                                                      'peakflowRecordedOn'] ??
-                                                                  "No data",
+                                                              : fitnessStress
+                                                                  ? fitnessstressReportData[
+                                                                          'fitnessandstressRecordedOn'] ??
+                                                                      "No data"
+                                                                  : "No data",
                                               textAlign: TextAlign.right,
                                               style: GoogleFonts.manrope(
                                                 fontSize: 14,
@@ -1286,15 +1569,21 @@ class _UserDetailsState extends State<UserDetails> {
                                               });
                                               peakflow
                                                   ? _getPeakflowHistoryReport()
-                                                  : inhaler
-                                                      ?
-                                                      // print('calling inhaler')
-                                                      _getInhalerHistoryReport()
-                                                      : asthma
-                                                          ? ()
-                                                          : fitnessStress
-                                                              ? _getFitnessStressHistoryReport()
-                                                              : ();
+                                                  : asthma
+                                                      ? _getasthmaHistoryReport()
+                                                      : steroid
+                                                          ? _getSteroidHistoryReport()
+                                                          : diurinal
+                                                              ? _getDiurinalHistoryReport()
+                                                              : inhaler
+                                                                  ?
+                                                                  // print('calling inhaler')
+                                                                  _getInhalerHistoryReport()
+                                                                  : asthma
+                                                                      ? ()
+                                                                      : fitnessStress
+                                                                          ? _getFitnessStressHistoryReport()
+                                                                          : ();
                                             },
                                             icon: Icon(
                                               Icons.download,
@@ -1333,14 +1622,6 @@ class _UserDetailsState extends State<UserDetails> {
                                                     child: Text(
                                                       'Peakflow Record:',
                                                       textAlign: TextAlign.left,
-                                                      // style: TextStyle(
-                                                      //   color:
-                                                      //       Color(0xFF004283),
-                                                      //   fontSize: 16,
-                                                      //   fontWeight:
-                                                      //       FontWeight.bold,
-                                                      //   fontFamily: 'Roboto',
-                                                      // ),
                                                       style:
                                                           GoogleFonts.manrope(
                                                         fontSize: 16,
@@ -1353,12 +1634,12 @@ class _UserDetailsState extends State<UserDetails> {
                                                       ),
                                                     ),
                                                   )
-                                                : inhaler
+                                                : steroid
                                                     ? Align(
                                                         alignment: Alignment
                                                             .centerLeft,
                                                         child: Text(
-                                                          'Inhaler Record:',
+                                                          'Steroid  Record:',
                                                           textAlign:
                                                               TextAlign.left,
                                                           style: GoogleFonts
@@ -1373,12 +1654,12 @@ class _UserDetailsState extends State<UserDetails> {
                                                           ),
                                                         ),
                                                       )
-                                                    : asthma
+                                                    : inhaler
                                                         ? Align(
                                                             alignment: Alignment
                                                                 .centerLeft,
                                                             child: Text(
-                                                              'Ashtma Record:',
+                                                              'Inhaler Record:',
                                                               textAlign:
                                                                   TextAlign
                                                                       .left,
@@ -1396,12 +1677,12 @@ class _UserDetailsState extends State<UserDetails> {
                                                               ),
                                                             ),
                                                           )
-                                                        : fitnessStress
+                                                        : diurinal
                                                             ? Align(
                                                                 alignment: Alignment
                                                                     .centerLeft,
                                                                 child: Text(
-                                                                  'Fitness and Stress Record:',
+                                                                  'Diurinal Record:',
                                                                   textAlign:
                                                                       TextAlign
                                                                           .left,
@@ -1420,29 +1701,78 @@ class _UserDetailsState extends State<UserDetails> {
                                                                   ),
                                                                 ),
                                                               )
-                                                            : Align(
-                                                                alignment: Alignment
-                                                                    .centerLeft,
-                                                                child: Text(
-                                                                  'Peakflow Record:',
-                                                                  textAlign:
-                                                                      TextAlign
-                                                                          .left,
-                                                                  style: GoogleFonts
-                                                                      .manrope(
-                                                                    fontSize:
-                                                                        16,
-                                                                    letterSpacing:
-                                                                        -.2,
-                                                                    height: 0,
-                                                                    color: Color(
-                                                                        0xFF004283),
-                                                                    fontWeight:
-                                                                        FontWeight
-                                                                            .w800,
-                                                                  ),
-                                                                ),
-                                                              ),
+                                                            : asthma
+                                                                ? Align(
+                                                                    alignment:
+                                                                        Alignment
+                                                                            .centerLeft,
+                                                                    child: Text(
+                                                                      'Ashtma Record:',
+                                                                      textAlign:
+                                                                          TextAlign
+                                                                              .left,
+                                                                      style: GoogleFonts
+                                                                          .manrope(
+                                                                        fontSize:
+                                                                            16,
+                                                                        letterSpacing:
+                                                                            -.2,
+                                                                        height:
+                                                                            0,
+                                                                        color: Color(
+                                                                            0xFF004283),
+                                                                        fontWeight:
+                                                                            FontWeight.w800,
+                                                                      ),
+                                                                    ),
+                                                                  )
+                                                                : fitnessStress
+                                                                    ? Align(
+                                                                        alignment:
+                                                                            Alignment.centerLeft,
+                                                                        child:
+                                                                            Text(
+                                                                          'Fitness and Stress Record:',
+                                                                          textAlign:
+                                                                              TextAlign.left,
+                                                                          style:
+                                                                              GoogleFonts.manrope(
+                                                                            fontSize:
+                                                                                16,
+                                                                            letterSpacing:
+                                                                                -.2,
+                                                                            height:
+                                                                                0,
+                                                                            color:
+                                                                                Color(0xFF004283),
+                                                                            fontWeight:
+                                                                                FontWeight.w800,
+                                                                          ),
+                                                                        ),
+                                                                      )
+                                                                    : Align(
+                                                                        alignment:
+                                                                            Alignment.centerLeft,
+                                                                        child:
+                                                                            Text(
+                                                                          'Peakflow Record:',
+                                                                          textAlign:
+                                                                              TextAlign.left,
+                                                                          style:
+                                                                              GoogleFonts.manrope(
+                                                                            fontSize:
+                                                                                16,
+                                                                            letterSpacing:
+                                                                                -.2,
+                                                                            height:
+                                                                                0,
+                                                                            color:
+                                                                                Color(0xFF004283),
+                                                                            fontWeight:
+                                                                                FontWeight.w800,
+                                                                          ),
+                                                                        ),
+                                                                      ),
                                           ],
                                         ),
                                       ),
@@ -1469,13 +1799,17 @@ class _UserDetailsState extends State<UserDetails> {
                                                   onTap: () {
                                                     peakflow
                                                         ? getPrevMonthPeakflow()
-                                                        : inhaler
-                                                            ? getPrevMonthInhaler()
-                                                            : asthma
-                                                                ? getPrevMonthAsthma()
-                                                                : fitnessStress
-                                                                    ? getPrevMonthFitnessStress()
-                                                                    : ();
+                                                        : steroid
+                                                            ? getPrevMonthSteroid()
+                                                            : inhaler
+                                                                ? getPrevMonthInhaler()
+                                                                : diurinal
+                                                                    ? getPrevMonthDiurinal()
+                                                                    : asthma
+                                                                        ? getPrevMonthAsthma()
+                                                                        : fitnessStress
+                                                                            ? getPrevMonthFitnessStress()
+                                                                            : ();
                                                   },
                                                   child: Container(
                                                     width: 36,
@@ -1570,13 +1904,17 @@ class _UserDetailsState extends State<UserDetails> {
                                                   onTap: () {
                                                     peakflow
                                                         ? getNextMonthPeakflow()
-                                                        : inhaler
-                                                            ? getNextMonthInhaler()
-                                                            : asthma
-                                                                ? getNextMonthAsthma()
-                                                                : fitnessStress
-                                                                    ? getNextMonthFitness()
-                                                                    : ();
+                                                        : steroid
+                                                            ? getNextMonthSteroid()
+                                                            : inhaler
+                                                                ? getNextMonthInhaler()
+                                                                : diurinal
+                                                                    ? getNextMonthDiurinal()
+                                                                    : asthma
+                                                                        ? getNextMonthAsthma()
+                                                                        : fitnessStress
+                                                                            ? getNextMonthFitness()
+                                                                            : ();
                                                   },
                                                   child: Container(
                                                     width: 36,
@@ -1645,7 +1983,7 @@ class _UserDetailsState extends State<UserDetails> {
                                   ? // Peakflow Chart
                                   SizedBox(
                                       width: screenSize.width,
-                                      height: screenSize.height * 0.4,
+                                      height: screenSize.height * 0.5,
                                       child: ReloadableChart(
                                         baseLineScore:
                                             peakflowReportData['baseLineScore']
@@ -1658,77 +1996,113 @@ class _UserDetailsState extends State<UserDetails> {
                                                 : false,
                                       ),
                                     )
-                                  : asthma
-                                      ? // Asthma Control Test Chart
-                                      SizedBox(
+                                  : steroid
+                                      ? SizedBox(
                                           width: screenSize.width,
-                                          height: screenSize.height * 0.4,
-                                          child: AsthmaReloadableChart(
-                                            asthmaControlTestReportChartData:
-                                                asthmacontroltestReportChartData,
-                                            hasData:
-                                                asthmacontroltestReportChartData
-                                                        .isNotEmpty
-                                                    ? true
-                                                    : false,
+                                          height: screenSize.height * 0.5,
+                                          child: SteroidReloadableChart(
+                                            steroidReportChartData:
+                                                steroidReportChartData,
+                                            hasData: steroidReportChartData
+                                                    .isNotEmpty
+                                                ? true
+                                                : false,
                                           ),
                                         )
-                                      : inhaler
-                                          ? SizedBox(
+                                      : asthma
+                                          ? // Asthma Control Test Chart
+                                          SizedBox(
                                               width: screenSize.width,
-                                              height: screenSize.height * 0.4,
-                                              child: InhalerReloadableChart(
-                                                baseLineScore:
-                                                    inhalerReportData[
-                                                            'baseLineScore']
-                                                        .toString(),
-                                                // peakflowReportChartData:
-                                                //     peakflowReportChartData,
-                                                inhalerReportChartData:
-                                                    inhalerReportChartData,
-                                                // hasData: peakflowReportChartData
-                                                //         .isNotEmpty
-                                                hasData: inhalerReportChartData
-                                                        .isNotEmpty
-                                                    ? true
-                                                    : false,
+                                              height: screenSize.height * 0.5,
+                                              child: AsthmaReloadableChart(
+                                                asthmaControlTestReportChartData:
+                                                    asthmacontroltestReportChartData,
+                                                hasData:
+                                                    asthmacontroltestReportChartData
+                                                            .isNotEmpty
+                                                        ? true
+                                                        : false,
                                               ),
                                             )
-                                          : fitnessStress
+                                          : inhaler
                                               ? SizedBox(
                                                   width: screenSize.width,
                                                   height:
-                                                      screenSize.height * 0.4,
-                                                  child: FitnessStressReloadableChart(
-                                                      fitnessstressReloadableChartData:
-                                                          fitnessstressReportChartData,
-                                                      hasData:
-                                                          fitnessstressReportChartData
-                                                                  .isNotEmpty
-                                                              ? true
-                                                              : false),
-                                                )
-                                              : SizedBox(
-                                                  width: screenSize.width,
-                                                  height:
-                                                      screenSize.height * 0.4,
-                                                  child: ReloadableChart(
-                                                    baseLineScore:
-                                                        peakflowReportData[
-                                                                'baseLineScore']
+                                                      screenSize.height * 0.5,
+                                                  child: InhalerReloadableChart(
+                                                    salbutomalDosage:
+                                                        inhalerReportData[
+                                                                'salbutomalDosage']
                                                             .toString(),
-                                                    peakflowReportChartData:
-                                                        peakflowReportChartData,
+                                                    inhalerReportChartData:
+                                                        inhalerReportChartData,
                                                     hasData:
-                                                        peakflowReportChartData
+                                                        inhalerReportChartData
                                                                 .isNotEmpty
                                                             ? true
                                                             : false,
                                                   ),
-                                                ),
+                                                )
+                                              : diurinal
+                                                  ? SizedBox(
+                                                      width: screenSize.width,
+                                                      height:
+                                                          screenSize.height *
+                                                              0.5,
+                                                      child:
+                                                          DiurinalReloadableChart(
+                                                        diruinalxReportChartData:
+                                                            diurinalReportChartDataxaxis,
+                                                        diruinalyReportChartData:
+                                                            diurinalReportChartDatayaxis,
+                                                        hasData: diurinalReportChartDataxaxis
+                                                                    .isNotEmpty &&
+                                                                diurinalReportChartDatayaxis
+                                                                    .isNotEmpty
+                                                            ? true
+                                                            : false,
+                                                      ),
+                                                    )
+                                                  : fitnessStress
+                                                      ? SizedBox(
+                                                          width:
+                                                              screenSize.width,
+                                                          height: screenSize
+                                                                  .height *
+                                                              0.5,
+                                                          child: FitnessStressReloadableChart(
+                                                              fitnessstressReloadableChartData:
+                                                                  fitnessstressReportChartData,
+                                                              hasData:
+                                                                  fitnessstressReportChartData
+                                                                          .isNotEmpty
+                                                                      ? true
+                                                                      : false),
+                                                        )
+                                                      : SizedBox(
+                                                          width:
+                                                              screenSize.width,
+                                                          height: screenSize
+                                                                  .height *
+                                                              0.5,
+                                                          child:
+                                                              ReloadableChart(
+                                                            baseLineScore:
+                                                                peakflowReportData[
+                                                                        'baseLineScore']
+                                                                    .toString(),
+                                                            peakflowReportChartData:
+                                                                peakflowReportChartData,
+                                                            hasData:
+                                                                peakflowReportChartData
+                                                                        .isNotEmpty
+                                                                    ? true
+                                                                    : false,
+                                                          ),
+                                                        ),
                               // Peakflow Legends Zone
                               SizedBox(
-                                height: 30,
+                                height: 20,
                               ),
 
                               peakflow
@@ -1757,6 +2131,16 @@ class _UserDetailsState extends State<UserDetails> {
                                                   // screenSize: screenSize,
                                                   )
                                               : const SizedBox.shrink()
+                             /*     : fitnessStress
+                                  ? fitnessstressReportTableData
+                                  .isNotEmpty
+                                  ? FitnessstressLegendsZone(
+                                 screenRatio:
+                                     screenSize.width /
+                                         screenSize.height,
+                                 screenSize: screenSize,
+                              )
+                                  : const SizedBox.shrink()*/
                                           : SizedBox(
                                               height: 50,
                                             ),
@@ -1772,50 +2156,73 @@ class _UserDetailsState extends State<UserDetails> {
                                           ),
                                         )
                                       : const SizedBox.shrink()
-                                  : asthma
-                                      ? asthmacontroltestReportTableData
-                                              .isNotEmpty
+                                  : diurinal
+                                      ? diurinalReportTableData.isNotEmpty
                                           ? SizedBox(
                                               key: ValueKey(currentMonth),
                                               width: screenSize.width,
-                                              child:
-                                                  AsthmaControlTestReportTable(
-                                                asthmacontroltestReportTableData:
-                                                    asthmacontroltestReportTableData,
+                                              child: DiurinalReportTable(
+                                                diurinalReportTableData:
+                                                    diurinalReportTableData,
                                               ),
                                             )
                                           : const SizedBox.shrink()
-                                      : inhaler
-                                          ? inhalerReportChartData.isNotEmpty
+                                      : steroid
+                                          ? steroidReportTableData.isNotEmpty
                                               ? SizedBox(
                                                   key: ValueKey(currentMonth),
                                                   width: screenSize.width,
-                                                  // child: PeakflowReportTable(
-                                                  //   peakflowReportTableData:
-                                                  //       peakflowReportTableData,
-                                                  // ),
-                                                  child: InhalerReportTable(
-                                                      inhalerReportTableData:
-                                                          inhalerReportTableData),
+                                                  child: SteroidReportTable(
+                                                    steroidReportTableData:
+                                                        steroidReportTableData,
+                                                  ),
                                                 )
-                                              : const SizedBox.shrink()
-                                          : fitnessStress
-                                              ? fitnessstressReportTableData
+                                              : SizedBox.shrink()
+                                          : asthma
+                                              ? asthmacontroltestReportTableData
                                                       .isNotEmpty
                                                   ? SizedBox(
                                                       key: ValueKey(
                                                           currentMonth),
                                                       width: screenSize.width,
-                                                      // child: PeakflowReportTable(
-                                                      //   peakflowReportTableData:
-                                                      //       peakflowReportTableData,
-                                                      // ),
-                                                      child: FitnessStressReportTable(
-                                                          fitnessstressReportTableData:
-                                                              fitnessstressReportTableData),
+                                                      child:
+                                                          AsthmaControlTestReportTable(
+                                                        asthmacontroltestReportTableData:
+                                                            asthmacontroltestReportTableData,
+                                                      ),
                                                     )
                                                   : const SizedBox.shrink()
-                                              : SizedBox.shrink()
+                                              : inhaler
+                                                  ? inhalerReportChartData
+                                                          .isNotEmpty
+                                                      ? SizedBox(
+                                                          key: ValueKey(
+                                                              currentMonth),
+                                                          width:
+                                                              screenSize.width,
+                                                          child: InhalerReportTable(
+                                                              salbutomalDosage:
+                                                                  inhalerReportData[
+                                                                      'salbutomalDosage'],
+                                                              inhalerReportTableData:
+                                                                  inhalerReportTableData),
+                                                        )
+                                                      : const SizedBox.shrink()
+                                                  : fitnessStress
+                                                      ? fitnessstressReportTableData
+                                                              .isNotEmpty
+                                                          ? SizedBox(
+                                                              key: ValueKey(
+                                                                  currentMonth),
+                                                              width: screenSize
+                                                                  .width,
+                                                              child: FitnessStressReportTable(
+                                                                  fitnessstressReportTableData:
+                                                                      fitnessstressReportTableData),
+                                                            )
+                                                          : const SizedBox
+                                                              .shrink()
+                                                      : SizedBox.shrink()
                             ],
                           ),
                         ),

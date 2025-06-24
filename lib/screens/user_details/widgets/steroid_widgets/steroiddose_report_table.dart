@@ -1,23 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:qiot_admin/models/asthma_control_test_report_model/asthma_control_test_report_table_model.dart';
-import 'package:qiot_admin/models/fitness_stress_report_model/stress_fitness_report_model.dart';
+import 'package:qiot_admin/models/steroid_dose_model/steroid_dose_table.dart';
 import 'package:qiot_admin/utils/convertToCustomFormat.dart';
 
-class FitnessStressReportTable extends StatefulWidget {
-  final List<FitnessStressReportModel>
-      fitnessstressReportTableData;
-  const FitnessStressReportTable(
-      {Key? key, required this.fitnessstressReportTableData})
+class SteroidReportTable extends StatefulWidget {
+  final List<SteroidDoseTableModel>
+      steroidReportTableData;
+  const SteroidReportTable(
+      {Key? key, required this.steroidReportTableData})
       : super(key: key);
 
   @override
-  _FitnessStressReportTableState createState() =>
-      _FitnessStressReportTableState();
+  _SteroidtReportTableState createState() =>
+      _SteroidtReportTableState();
 }
 
-class _FitnessStressReportTableState
-    extends State<FitnessStressReportTable> {
+class _SteroidtReportTableState
+    extends State<SteroidReportTable> {
   @override
   void initState() {
     super.initState();
@@ -32,10 +31,10 @@ class _FitnessStressReportTableState
       return DateFormat('dd/MM/yyyy hh:mm a').format(parsedDate);
     }
     // Define column widths
-    final double asthmacontroltestObservedOnWidth =
-        screenSize.width * 0.2; // Adjust as needed
-    final double asthmacontroltestValueWidth =
-        screenSize.width * 0.2; // Adjust as needed
+    final double steoridObservedOnWidth =
+        screenSize.width * 0.3; // Adjust as needed
+    final double steroidValueWidth =
+        screenSize.width * 0.3; // Adjust as needed
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -46,9 +45,9 @@ class _FitnessStressReportTableState
           columns: [
             DataColumn(
               label: SizedBox(
-                width: asthmacontroltestObservedOnWidth, // Set width
+                width: steoridObservedOnWidth, // Set width
                 child: Text(
-                  'Fitness and Stress Observed On',
+                  'Steroid Dosage Observed On',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 12,
@@ -60,23 +59,9 @@ class _FitnessStressReportTableState
             ),
             DataColumn(
               label: SizedBox(
-                width: asthmacontroltestValueWidth, // Set width
+                width: steroidValueWidth, // Set width
                 child: Text(
-                  'Fitness Value',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 12,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 2,
-                ),
-              ),
-            ),
-             DataColumn(
-              label: SizedBox(
-                width: asthmacontroltestValueWidth, // Set width
-                child: Text(
-                  'Stress Value',
+                  'Steroid Dosage Value',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 12,
@@ -87,13 +72,13 @@ class _FitnessStressReportTableState
               ),
             ),
           ],
-          rows: widget.fitnessstressReportTableData.reversed
+          rows: widget.steroidReportTableData.reversed
               .toList()
               .map((data) {
             return DataRow(cells: [
               DataCell(
                 SizedBox(
-                  width: asthmacontroltestObservedOnWidth,
+                  width: steoridObservedOnWidth,
                   child: Text(
                     convertToCustomFormat(data.createdAt.toString()),
                     textAlign: TextAlign.center,
@@ -107,23 +92,9 @@ class _FitnessStressReportTableState
               ),
               DataCell(
                 SizedBox(
-                  width: asthmacontroltestValueWidth,
+                  width: steroidValueWidth,
                   child: Text(
-                    data.fitnessValue.toString(),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 12,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 2,
-                  ),
-                ),
-              ),
-               DataCell(
-                SizedBox(
-                  width: asthmacontroltestValueWidth,
-                  child: Text(
-                    data.stressValue.toString(),
+                    data.steroiddoseValue.toString(),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 12,

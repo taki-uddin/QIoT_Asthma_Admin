@@ -3,13 +3,13 @@ import 'package:qiot_admin/models/inhaler_report_model/inhaler_chart_model.dart'
 import 'package:qiot_admin/screens/user_details/widgets/inhaler_widgets/inhaler_report_chart.dart';
 
 class InhalerReloadableChart extends StatefulWidget {
-  String baseLineScore;
+  String salbutomalDosage;
   List<InhalerReportChartModel> inhalerReportChartData;
   bool hasData;
 
   InhalerReloadableChart({
     super.key,
-    required this.baseLineScore,
+    required this.salbutomalDosage,
     required this.inhalerReportChartData,
     required this.hasData,
   });
@@ -35,7 +35,7 @@ class InhalerReloadableChartState extends State<InhalerReloadableChart> {
     // );
     return InhalerReportChart(
         inhalerReportChartData: widget.inhalerReportChartData,
-        baseLineScore: widget.baseLineScore,
+        salbutomalDosage: widget.salbutomalDosage,
         hasData: widget.hasData);
   }
 }
