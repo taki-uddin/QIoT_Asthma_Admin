@@ -72,6 +72,71 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  void _showFullScreenPdf() {
+    if (pdfUrl.isEmpty) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: Container(
+            width: MediaQuery.of(context).size.width * 0.8,
+            height: MediaQuery.of(context).size.height * 0.8,
+            child: Column(
+              children: [
+                // Header with close button
+                Container(
+                  padding: const EdgeInsets.all(16.0),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF004283),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(8),
+                      topRight: Radius.circular(8),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Educational Plan - Full View',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(
+                          Icons.close,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // PDF Viewer
+                Expanded(
+                  child: Container(
+                    color: Colors.grey[100],
+                    child: pdfPinchController != null
+                        ? PdfViewPinch(controller: pdfPinchController!)
+                        : const Center(
+                            child: CircularProgressIndicator(
+                              color: Color(0xFF004283),
+                            ),
+                          ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> uploadEP() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -128,6 +193,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               backgroundColor: Colors.green,
             ),
           );
+          // Refresh the PDF preview after successful upload
+          await getpdfUrl();
         } else if (uploadResult != null && uploadResult['error'] != null) {
           logger.d('Upload failed: ${uploadResult['error']}');
           ScaffoldMessenger.of(context).showSnackBar(
@@ -343,15 +410,144 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       Container(
                         width: screenSize.width * 0.16,
-                        height: screenSize.height * 0.4,
+                        height: screenSize.height * 0.5,
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8.0, vertical: 4.0),
+                            horizontal: 8.0, vertical: 8.0),
                         margin: const EdgeInsets.all(16.0),
-                        child: pdfPinchController != null
-                            ? PdfViewPinch(
-                                controller: pdfPinchController!,
-                              )
-                            : const SizedBox(),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF004283).withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: const Color(0xFF004283).withOpacity(0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            // Header with title and action buttons
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Preview',
+                                  style: TextStyle(
+                                    fontSize: 16.0,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF004283),
+                                  ),
+                                ),
+                                Row(
+                                  children: [
+                                    if (pdfUrl.isNotEmpty)
+                                      IconButton(
+                                        onPressed: () {
+                                          _showFullScreenPdf();
+                                        },
+                                        icon: const Icon(
+                                          Icons.fullscreen,
+                                          color: Color(0xFF004283),
+                                          size: 20,
+                                        ),
+                                        tooltip: 'View Full Screen',
+                                      ),
+                                    IconButton(
+                                      onPressed: () async {
+                                        await getpdfUrl();
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Preview refreshed'),
+                                            backgroundColor: Colors.blue,
+                                            duration: Duration(seconds: 2),
+                                          ),
+                                        );
+                                      },
+                                      icon: const Icon(
+                                        Icons.refresh,
+                                        color: Color(0xFF004283),
+                                        size: 20,
+                                      ),
+                                      tooltip: 'Refresh Preview',
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            // PDF Preview or placeholder
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: const Color(0xFF004283)
+                                        .withOpacity(0.1),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: pdfPinchController != null
+                                    ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: PdfViewPinch(
+                                          controller: pdfPinchController!,
+                                        ),
+                                      )
+                                    : pdfUrl.isNotEmpty
+                                        ? const Center(
+                                            child: Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                CircularProgressIndicator(
+                                                  color: Color(0xFF004283),
+                                                ),
+                                                SizedBox(height: 16),
+                                                Text(
+                                                  'Loading PDF...',
+                                                  style: TextStyle(
+                                                    color: Color(0xFF004283),
+                                                    fontSize: 14,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          )
+                                        : const Center(
+                                            child: Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Icon(
+                                                  Icons.picture_as_pdf,
+                                                  size: 48,
+                                                  color: Color(0xFF004283),
+                                                ),
+                                                SizedBox(height: 16),
+                                                Text(
+                                                  'No Educational Plan',
+                                                  style: TextStyle(
+                                                    color: Color(0xFF004283),
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                                SizedBox(height: 8),
+                                                Text(
+                                                  'Upload a PDF to see preview',
+                                                  style: TextStyle(
+                                                    color: Color(0xFF004283),
+                                                    fontSize: 12,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
