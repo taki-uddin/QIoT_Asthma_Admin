@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:qiot_admin/constants/api_constants.dart';
 import 'dart:html' as html;
 import 'package:qiot_admin/helpers/session_storage_helpers.dart';
@@ -204,8 +206,13 @@ class DashboardUsersData {
     }
   }
 
-  static Future<Map<String, dynamic>?> getInhalerhistoryReport(BuildContext context,String userId,
-      int startmonth, int startyear, int endmonth, int endyear) async {
+  static Future<Map<String, dynamic>?> getInhalerhistoryReport(
+      BuildContext context,
+      String userId,
+      int startmonth,
+      int startyear,
+      int endmonth,
+      int endyear) async {
     logger.d('userId: ${userId}');
     var headers = {
       // 'Content-Type': 'application/json',
@@ -234,23 +241,23 @@ class DashboardUsersData {
       } else if (response.statusCode == 404) {
         print('no data found');
         showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('No Data Found'),
-            content: const Text('No data is available for the selected period.'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(); // Close the dialog
-                },
-                child: const Text('OK'),
-              ),
-            ],
-          );
-        },
-      );
-        
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('No Data Found'),
+              content:
+                  const Text('No data is available for the selected period.'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Close the dialog
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
       } else {
         print('eror not found the value');
         logger.d("error: ${response.reasonPhrase}");
@@ -300,8 +307,7 @@ class DashboardUsersData {
     }
   }
 
-
-    static Future<Map<String, dynamic>?> getFitnessStresshistories(
+  static Future<Map<String, dynamic>?> getFitnessStresshistories(
       String userId, int month, int year) async {
     logger.d('userId: ${userId}');
     var headers = {
@@ -342,8 +348,13 @@ class DashboardUsersData {
     }
   }
 
-  static Future<Map<String, dynamic>?> getFitnessStresshistoryReport(BuildContext context,String userId,
-      int startmonth, int startyear, int endmonth, int endyear) async {
+  static Future<Map<String, dynamic>?> getFitnessStresshistoryReport(
+      BuildContext context,
+      String userId,
+      int startmonth,
+      int startyear,
+      int endmonth,
+      int endyear) async {
     logger.d('userId: ${userId}');
     var headers = {
       // 'Content-Type': 'application/json',
@@ -372,23 +383,23 @@ class DashboardUsersData {
       } else if (response.statusCode == 404) {
         print('no data found');
         showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('No Data Found'),
-            content: const Text('No data is available for the selected period.'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(); // Close the dialog
-                },
-                child: const Text('OK'),
-              ),
-            ],
-          );
-        },
-      );
-        
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('No Data Found'),
+              content:
+                  const Text('No data is available for the selected period.'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Close the dialog
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
       } else {
         print('eror not found the value');
         logger.d("error: ${response.reasonPhrase}");
@@ -399,7 +410,6 @@ class DashboardUsersData {
       return null;
     }
   }
-
 
   Future<Map<String, dynamic>?> uploadUsersAsthmaActionPlan(
     html.File file,
@@ -460,7 +470,6 @@ class DashboardUsersData {
     html.File file,
   ) async {
     var headers = {
-      // 'Content-Type': 'application/json',
       'Authorization':
           'Bearer ${await SessionStorageHelpers.getStorage('accessToken')}',
     };
@@ -468,43 +477,66 @@ class DashboardUsersData {
     var request = http.MultipartRequest('POST',
         Uri.parse('${ApiConstants.baseURL}/admin/uploadeducationalplan'));
 
-    // Read file bytes
-    var reader = html.FileReader();
-    reader.readAsArrayBuffer(file);
-    await reader.onLoad.first; // Wait for file to be loaded
-    List<int> fileBytes = reader.result as List<int>;
-
-    // Add the file to the request
-    request.files.add(
-      http.MultipartFile.fromBytes(
-        'file', // The name of the field expected by the server
-        fileBytes, // The file bytes
-        filename: file.name, // The file name
-      ),
-    );
-
-    // Add headers to the request
-    request.headers.addAll(headers);
-
     try {
+      // Read file bytes using FileReader
+      var reader = html.FileReader();
+      reader.readAsArrayBuffer(file);
+      await reader.onLoad.first; // Wait for file to be loaded
+
+      // Convert to Uint8List for better handling
+      List<int> fileBytes = (reader.result as List<int>);
+
+      logger.d('File name: ${file.name}');
+      logger.d('File size: ${fileBytes.length} bytes');
+      logger.d('File type: ${file.type}');
+
+      // Validate file is not empty
+      if (fileBytes.isEmpty) {
+        logger.d('Error: File is empty');
+        return {'error': 'File is empty'};
+      }
+
+      // Add the file to the request with proper content type
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'file', // The name of the field expected by the server
+          fileBytes, // The file bytes
+          filename: file.name, // The file name
+          contentType: MediaType.parse(
+              file.type.isNotEmpty ? file.type : 'application/pdf'),
+        ),
+      );
+
+      // Add headers to the request
+      request.headers.addAll(headers);
+
+      logger.d('Sending request to: ${request.url}');
+      logger.d('Request headers: ${request.headers}');
+
       http.StreamedResponse response = await request.send();
       String responseBody = await response.stream.bytesToString();
+
+      logger.d('Response status: ${response.statusCode}');
+      logger.d('Response body: $responseBody');
 
       if (response.statusCode == 200) {
         if (responseBody.isNotEmpty) {
           Map<String, dynamic>? jsonResponse = json.decode(responseBody);
+          logger.d('Upload successful: $jsonResponse');
           return jsonResponse;
         } else {
           logger.d('Response body is empty or null');
-          return null;
+          return {'error': 'Empty response from server'};
         }
       } else {
-        logger.d("error: ${response.reasonPhrase}");
-        return null;
+        logger.d(
+            "Upload failed with status ${response.statusCode}: ${response.reasonPhrase}");
+        logger.d("Error response: $responseBody");
+        return {'error': 'Upload failed: ${response.reasonPhrase}'};
       }
     } catch (e) {
-      logger.d('error: Failed to make HTTP request: $e');
-      return null;
+      logger.d('Exception during upload: $e');
+      return {'error': 'Upload failed: $e'};
     }
   }
 

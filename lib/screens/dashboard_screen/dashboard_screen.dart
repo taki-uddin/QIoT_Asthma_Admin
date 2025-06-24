@@ -75,32 +75,97 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> uploadEP() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
+      allowedExtensions: ['pdf'], // Only allow PDF files as per API requirement
     );
 
     if (result != null) {
       PlatformFile file = result.files.single;
 
-      // Read the file bytes asynchronously
-      List<int> bytes = file.bytes!.toList();
+      // Validate file size (limit to 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+                'File size too large. Please select a file smaller than 10MB.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
 
-      setState(() {
-        _selectedFile = html.File(bytes, file.name); // For web
-      });
+      // Show loading indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              CircularProgressIndicator(color: Colors.white),
+              SizedBox(width: 16),
+              Text('Uploading Educational Plan...'),
+            ],
+          ),
+          duration: Duration(seconds: 30),
+        ),
+      );
 
       try {
-        final Map<String, dynamic>? uploadUserAAP =
+        // Create html.File from bytes for web
+        List<int> bytes = file.bytes!.toList();
+        setState(() {
+          _selectedFile = html.File(bytes, file.name);
+        });
+
+        final Map<String, dynamic>? uploadResult =
             await DashboardUsersData().uploadEducationalPlan(_selectedFile!);
-        if (uploadUserAAP != null) {
-          logger.d('Your Asthma Action Plan has been uploaded!');
+
+        // Hide loading snackbar
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+        if (uploadResult != null && uploadResult['status'] == 200) {
+          logger.d('Educational Plan uploaded successfully!');
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Educational Plan uploaded successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else if (uploadResult != null && uploadResult['error'] != null) {
+          logger.d('Upload failed: ${uploadResult['error']}');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Upload failed: ${uploadResult['error']}'),
+              backgroundColor: Colors.red,
+            ),
+          );
         } else {
-          logger.d('Failed to upload Asthma Action Plan');
+          logger.d('Failed to upload Educational Plan - Unknown error');
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content:
+                  Text('Failed to upload Educational Plan. Please try again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
         }
       } catch (e) {
-        logger.d('Error: $e');
+        // Hide loading snackbar
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+        logger.d('Error during upload: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Upload error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } else {
       logger.d('No file selected');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No file selected'),
+          backgroundColor: Colors.orange,
+        ),
+      );
     }
   }
 
