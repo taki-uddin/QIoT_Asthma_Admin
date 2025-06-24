@@ -170,60 +170,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
-        return Dialog(
-          child: Container(
-            width: MediaQuery.of(context).size.width * 0.8,
-            height: MediaQuery.of(context).size.height * 0.8,
-            child: Column(
-              children: [
-                // Header with close button
-                Container(
-                  padding: const EdgeInsets.all(16.0),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF004283),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(8),
-                      topRight: Radius.circular(8),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Educational Plan - Full View',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        icon: const Icon(
-                          Icons.close,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // PDF Viewer
-                Expanded(
-                  child: Container(
-                    color: Colors.grey[100],
-                    child: pdfPinchController != null
-                        ? PdfViewPinch(controller: pdfPinchController!)
-                        : const Center(
-                            child: CircularProgressIndicator(
-                              color: Color(0xFF004283),
-                            ),
-                          ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
+        return _FullScreenPdfDialog(pdfUrl: pdfUrl);
       },
     );
   }
@@ -795,5 +742,230 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return const AddUsersScreen();
     }
     return const UserListScreen();
+  }
+}
+
+class _FullScreenPdfDialog extends StatefulWidget {
+  final String pdfUrl;
+
+  const _FullScreenPdfDialog({required this.pdfUrl});
+
+  @override
+  State<_FullScreenPdfDialog> createState() => _FullScreenPdfDialogState();
+}
+
+class _FullScreenPdfDialogState extends State<_FullScreenPdfDialog> {
+  PdfControllerPinch? fullScreenController;
+  bool isLoading = true;
+  String? errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPdfForFullScreen();
+  }
+
+  Future<void> _loadPdfForFullScreen() async {
+    try {
+      logger.d('Loading PDF for full screen: ${widget.pdfUrl}');
+
+      // Fetch PDF bytes
+      final response = await http.get(
+        Uri.parse(widget.pdfUrl),
+        headers: {
+          'Accept': 'application/pdf,*/*',
+          'User-Agent': 'QIoT-Admin-Dashboard/1.0',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        if (response.bodyBytes.isEmpty) {
+          throw Exception('PDF file is empty');
+        }
+
+        // Validate PDF signature
+        final bytes = response.bodyBytes;
+        if (bytes.length < 4) {
+          throw Exception('File too small to be a valid PDF');
+        }
+
+        final header = String.fromCharCodes(bytes.take(4));
+        if (!header.startsWith('%PDF')) {
+          throw Exception('File is not a valid PDF');
+        }
+
+        // Create controller for full screen
+        fullScreenController = PdfControllerPinch(
+          document: PdfDocument.openData(bytes),
+        );
+
+        if (mounted) {
+          setState(() {
+            isLoading = false;
+            errorMessage = null;
+          });
+        }
+
+        logger.d('Full screen PDF loaded successfully');
+      } else {
+        throw Exception('Failed to load PDF: HTTP ${response.statusCode}');
+      }
+    } catch (e) {
+      logger.d('Error loading PDF for full screen: $e');
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+          errorMessage = e.toString();
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    fullScreenController?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      insetPadding: const EdgeInsets.all(20),
+      child: Container(
+        width: MediaQuery.of(context).size.width * 0.9,
+        height: MediaQuery.of(context).size.height * 0.9,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          color: Colors.white,
+        ),
+        child: Column(
+          children: [
+            // Header with close button
+            Container(
+              padding: const EdgeInsets.all(16.0),
+              decoration: const BoxDecoration(
+                color: Color(0xFF004283),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(8),
+                  topRight: Radius.circular(8),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Educational Plan - Full View',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // PDF Viewer
+            Expanded(
+              child: Container(
+                color: Colors.grey[100],
+                child: _buildFullScreenContent(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFullScreenContent() {
+    if (errorMessage != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Colors.red,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Error Loading PDF',
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32.0),
+              child: Text(
+                errorMessage!,
+                style: const TextStyle(
+                  color: Colors.red,
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () {
+                setState(() {
+                  isLoading = true;
+                  errorMessage = null;
+                });
+                _loadPdfForFullScreen();
+              },
+              icon: const Icon(Icons.refresh, size: 18),
+              label: const Text('Retry'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF004283),
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      );
+    } else if (isLoading) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              color: Color(0xFF004283),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Loading PDF...',
+              style: TextStyle(
+                color: Color(0xFF004283),
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+      );
+    } else if (fullScreenController != null) {
+      return PdfViewPinch(controller: fullScreenController!);
+    } else {
+      return const Center(
+        child: Text(
+          'No PDF available',
+          style: TextStyle(
+            color: Color(0xFF004283),
+            fontSize: 16,
+          ),
+        ),
+      );
+    }
   }
 }
