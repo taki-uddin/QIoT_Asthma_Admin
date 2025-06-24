@@ -13,8 +13,10 @@ import 'package:qiot_admin/screens/user_list_screen.dart';
 import 'package:qiot_admin/services/api/authentication.dart';
 import 'package:http/http.dart' as http;
 import 'dart:html' as html;
+import 'dart:typed_data';
 
 import 'package:qiot_admin/services/api/dashboard_users_data.dart';
+import 'package:qiot_admin/main.dart';
 
 class DashboardScreen extends StatefulWidget {
   final FluroRouter router;
@@ -30,6 +32,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   html.File? _selectedFile;
   String pdfUrl = '';
   PdfControllerPinch? pdfPinchController;
+  String? pdfLoadError;
+  bool isLoadingPdf = false;
 
   @override
   void initState() {
@@ -38,37 +42,124 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> getpdfUrl() async {
-    final Map<String, dynamic>? pdfUrlData =
-        await DashboardUsersData().getEducationalPlan();
-    if (pdfUrlData != null) {
+    setState(() {
+      isLoadingPdf = true;
+      pdfLoadError = null;
+      pdfPinchController = null;
+    });
+
+    try {
+      final Map<String, dynamic>? pdfUrlData =
+          await DashboardUsersData().getEducationalPlan();
+      if (pdfUrlData != null) {
+        setState(() {
+          pdfUrl = pdfUrlData['educationalPlans'];
+        });
+        // Load PDF document once url is fetched
+        await loadPdfDocument();
+        logger.d('pdfUrlData: $pdfUrl');
+      } else {
+        setState(() {
+          pdfLoadError = 'Failed to get PDF URL from server';
+          isLoadingPdf = false;
+        });
+        logger.d('Failed to get pdf url');
+      }
+    } catch (e) {
       setState(() {
-        pdfUrl = pdfUrlData['educationalPlans'];
+        pdfLoadError = 'Error getting PDF URL: $e';
+        isLoadingPdf = false;
       });
-      // Load PDF document once url is fetched
-      await loadPdfDocument();
-      logger.d('pdfUrlData: $pdfUrl');
-    } else {
-      logger.d('Failed to get pdf url');
+      logger.d('Error getting PDF URL: $e');
     }
   }
 
   Future<void> loadPdfDocument() async {
-    // Fetch PDF bytes asynchronously
-    final Uint8List bytes = await fetchPdfBytes(pdfUrl);
-    // Initialize PdfControllerPinch with document
-    pdfPinchController = PdfControllerPinch(
-      document: PdfDocument.openData(bytes),
-    );
-    // Update UI
-    setState(() {});
+    try {
+      if (pdfUrl.isEmpty) {
+        logger.d('PDF URL is empty, cannot load document');
+        setState(() {
+          pdfLoadError = 'No PDF URL available';
+          isLoadingPdf = false;
+        });
+        return;
+      }
+
+      logger.d('Loading PDF document from: $pdfUrl');
+
+      // Fetch PDF bytes asynchronously
+      final Uint8List bytes = await fetchPdfBytes(pdfUrl);
+
+      // Initialize PdfControllerPinch with document
+      pdfPinchController = PdfControllerPinch(
+        document: PdfDocument.openData(bytes),
+      );
+
+      logger.d('PDF document loaded successfully');
+
+      // Update UI
+      if (mounted) {
+        setState(() {
+          pdfLoadError = null;
+          isLoadingPdf = false;
+        });
+      }
+    } catch (e) {
+      logger.d('Error loading PDF document: $e');
+      // Reset the controller on error
+      pdfPinchController = null;
+      if (mounted) {
+        setState(() {
+          pdfLoadError = 'Failed to load PDF: ${e.toString()}';
+          isLoadingPdf = false;
+        });
+      }
+    }
   }
 
   Future<Uint8List> fetchPdfBytes(String pdfUrl) async {
-    final response = await http.get(Uri.parse(pdfUrl));
-    if (response.statusCode == 200) {
-      return response.bodyBytes;
-    } else {
-      throw Exception('Failed to load PDF: ${response.statusCode}');
+    try {
+      logger.d('Fetching PDF bytes from: $pdfUrl');
+
+      // Add headers for better compatibility with Cloudinary
+      final response = await http.get(
+        Uri.parse(pdfUrl),
+        headers: {
+          'Accept': 'application/pdf,*/*',
+          'User-Agent': 'QIoT-Admin-Dashboard/1.0',
+        },
+      );
+
+      logger.d('HTTP Response status: ${response.statusCode}');
+      logger.d('HTTP Response headers: ${response.headers}');
+      logger.d('HTTP Response content length: ${response.bodyBytes.length}');
+
+      if (response.statusCode == 200) {
+        if (response.bodyBytes.isEmpty) {
+          throw Exception('PDF file is empty');
+        }
+
+        // Validate PDF signature
+        final bytes = response.bodyBytes;
+        if (bytes.length < 4) {
+          throw Exception('File too small to be a valid PDF');
+        }
+
+        // Check PDF magic bytes (%PDF)
+        final header = String.fromCharCodes(bytes.take(4));
+        if (!header.startsWith('%PDF')) {
+          logger.d('Invalid PDF header: $header');
+          throw Exception('File is not a valid PDF (header: $header)');
+        }
+
+        return bytes;
+      } else {
+        throw Exception(
+            'Failed to load PDF: HTTP ${response.statusCode} - ${response.reasonPhrase}');
+      }
+    } catch (e) {
+      logger.d('Error fetching PDF bytes: $e');
+      rethrow;
     }
   }
 
@@ -486,64 +577,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     width: 1,
                                   ),
                                 ),
-                                child: pdfPinchController != null
-                                    ? ClipRRect(
-                                        borderRadius: BorderRadius.circular(8),
-                                        child: PdfViewPinch(
-                                          controller: pdfPinchController!,
-                                        ),
-                                      )
-                                    : pdfUrl.isNotEmpty
-                                        ? const Center(
-                                            child: Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                CircularProgressIndicator(
-                                                  color: Color(0xFF004283),
-                                                ),
-                                                SizedBox(height: 16),
-                                                Text(
-                                                  'Loading PDF...',
-                                                  style: TextStyle(
-                                                    color: Color(0xFF004283),
-                                                    fontSize: 14,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          )
-                                        : const Center(
-                                            child: Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                Icon(
-                                                  Icons.picture_as_pdf,
-                                                  size: 48,
-                                                  color: Color(0xFF004283),
-                                                ),
-                                                SizedBox(height: 16),
-                                                Text(
-                                                  'No Educational Plan',
-                                                  style: TextStyle(
-                                                    color: Color(0xFF004283),
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                                SizedBox(height: 8),
-                                                Text(
-                                                  'Upload a PDF to see preview',
-                                                  style: TextStyle(
-                                                    color: Color(0xFF004283),
-                                                    fontSize: 12,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                              ],
-                                            ),
-                                          ),
+                                child: _buildPdfPreview(),
                               ),
                             ),
                           ],
@@ -558,6 +592,121 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildPdfPreview() {
+    if (pdfLoadError != null) {
+      // Show error state
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.error_outline,
+              size: 48,
+              color: Colors.red,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Error Loading PDF',
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Text(
+                pdfLoadError!,
+                style: const TextStyle(
+                  color: Colors.red,
+                  fontSize: 12,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () async {
+                await getpdfUrl();
+              },
+              icon: const Icon(Icons.refresh, size: 16),
+              label: const Text('Retry'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF004283),
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              ),
+            ),
+          ],
+        ),
+      );
+    } else if (isLoadingPdf) {
+      // Show loading state
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              color: Color(0xFF004283),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Loading PDF...',
+              style: TextStyle(
+                color: Color(0xFF004283),
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      );
+    } else if (pdfPinchController != null) {
+      // Show PDF viewer
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: PdfViewPinch(
+          controller: pdfPinchController!,
+        ),
+      );
+    } else {
+      // Show empty state
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.picture_as_pdf,
+              size: 48,
+              color: Color(0xFF004283),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'No Educational Plan',
+              style: TextStyle(
+                color: Color(0xFF004283),
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Upload a PDF to see preview',
+              style: TextStyle(
+                color: Color(0xFF004283),
+                fontSize: 12,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   Widget _buildMenu(TopMenuData data, int index) {
