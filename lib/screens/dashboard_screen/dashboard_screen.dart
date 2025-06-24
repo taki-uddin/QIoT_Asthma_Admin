@@ -264,10 +264,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
 
       try {
+        // Validate file bytes exist
+        if (file.bytes == null) {
+          throw Exception('File bytes are null');
+        }
+
+        // Log file info for debugging
+        logger.d('Original file size: ${file.size} bytes');
+        logger.d('File name: ${file.name}');
+        logger.d('File extension: ${file.extension}');
+
         // Create html.File from bytes for web
-        List<int> bytes = file.bytes!.toList();
+        Uint8List bytes = file.bytes!;
+
+        // Validate PDF magic bytes before upload
+        if (bytes.length < 4) {
+          throw Exception('File too small to be a valid PDF');
+        }
+
+        String header = String.fromCharCodes(bytes.take(4));
+        if (!header.startsWith('%PDF')) {
+          throw Exception('Selected file is not a valid PDF (header: $header)');
+        }
+
+        logger.d('PDF validation passed. Header: $header');
+        logger.d('Bytes length: ${bytes.length}');
+
         setState(() {
-          _selectedFile = html.File(bytes, file.name);
+          _selectedFile = html.File([bytes], file.name);
         });
 
         final Map<String, dynamic>? uploadResult =

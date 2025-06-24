@@ -774,8 +774,8 @@ class DashboardUsersData {
       reader.readAsArrayBuffer(file);
       await reader.onLoad.first; // Wait for file to be loaded
 
-      // Convert to Uint8List for better handling
-      List<int> fileBytes = (reader.result as List<int>);
+      // Convert to Uint8List for proper binary handling
+      Uint8List fileBytes = Uint8List.fromList(reader.result as List<int>);
 
       logger.d('File name: ${file.name}');
       logger.d('File size: ${fileBytes.length} bytes');
@@ -785,6 +785,16 @@ class DashboardUsersData {
       if (fileBytes.isEmpty) {
         logger.d('Error: File is empty');
         return {'error': 'File is empty'};
+      }
+
+      // Validate PDF magic bytes on the client side too
+      if (fileBytes.length >= 4) {
+        String header = String.fromCharCodes(fileBytes.take(4));
+        logger.d('PDF header validation: $header');
+        if (!header.startsWith('%PDF')) {
+          logger.d('Error: Invalid PDF header detected in upload function');
+          return {'error': 'Invalid PDF file format'};
+        }
       }
 
       // Add the file to the request with proper content type
