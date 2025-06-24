@@ -757,6 +757,25 @@ class DashboardUsersData {
     }
   }
 
+  String _getContentType(String filename) {
+    String extension = filename.split('.').last.toLowerCase();
+    switch (extension) {
+      case 'pdf':
+        return 'application/pdf';
+      case 'png':
+        return 'image/png';
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      case 'doc':
+        return 'application/msword';
+      case 'docx':
+        return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      default:
+        return 'application/octet-stream';
+    }
+  }
+
   Future<Map<String, dynamic>?> uploadEducationalPlan(
     html.File file,
   ) async {
@@ -787,15 +806,15 @@ class DashboardUsersData {
         return {'error': 'File is empty'};
       }
 
-      // Validate PDF magic bytes on the client side too
+      // Log file information for debugging
+      logger.d('File size: ${fileBytes.length} bytes');
       if (fileBytes.length >= 4) {
         String header = String.fromCharCodes(fileBytes.take(4));
-        logger.d('PDF header validation: $header');
-        if (!header.startsWith('%PDF')) {
-          logger.d('Error: Invalid PDF header detected in upload function');
-          return {'error': 'Invalid PDF file format'};
-        }
+        logger.d('File header: $header');
       }
+
+      // Determine content type based on file extension
+      String contentType = _getContentType(file.name);
 
       // Add the file to the request with proper content type
       request.files.add(
@@ -803,8 +822,7 @@ class DashboardUsersData {
           'file', // The name of the field expected by the server
           fileBytes, // The file bytes
           filename: file.name, // The file name
-          contentType: MediaType.parse(
-              file.type.isNotEmpty ? file.type : 'application/pdf'),
+          contentType: MediaType.parse(contentType),
         ),
       );
 

@@ -34,6 +34,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   PdfControllerPinch? pdfPinchController;
   String? pdfLoadError;
   bool isLoadingPdf = false;
+  String fileType = 'PDF'; // Track current file type
 
   @override
   void initState() {
@@ -49,28 +50,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
 
     try {
-      final Map<String, dynamic>? pdfUrlData =
+      final Map<String, dynamic>? fileUrlData =
           await DashboardUsersData().getEducationalPlan();
-      if (pdfUrlData != null) {
+      if (fileUrlData != null) {
+        String fileUrl = fileUrlData['educationalPlans'];
+
+        // Determine file type from URL
+        String detectedFileType = _getFileTypeFromUrl(fileUrl);
+
         setState(() {
-          pdfUrl = pdfUrlData['educationalPlans'];
+          pdfUrl = fileUrl;
+          fileType = detectedFileType;
         });
-        // Load PDF document once url is fetched
-        await loadPdfDocument();
-        logger.d('pdfUrlData: $pdfUrl');
+
+        // Load document based on file type
+        if (fileType == 'PDF') {
+          await loadPdfDocument();
+        }
+        logger.d('File URL: $pdfUrl, Type: $fileType');
       } else {
         setState(() {
-          pdfLoadError = 'Failed to get PDF URL from server';
+          pdfLoadError = 'Failed to get file URL from server';
           isLoadingPdf = false;
         });
-        logger.d('Failed to get pdf url');
+        logger.d('Failed to get file url');
       }
     } catch (e) {
       setState(() {
-        pdfLoadError = 'Error getting PDF URL: $e';
+        pdfLoadError = 'Error getting file URL: $e';
         isLoadingPdf = false;
       });
-      logger.d('Error getting PDF URL: $e');
+      logger.d('Error getting file URL: $e');
     }
   }
 
@@ -163,6 +173,83 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  String _getFileTypeFromUrl(String url) {
+    // Extract file extension from URL
+    String extension = url.split('.').last.toLowerCase().split('?').first;
+
+    switch (extension) {
+      case 'pdf':
+        return 'PDF';
+      case 'png':
+        return 'PNG';
+      case 'jpg':
+      case 'jpeg':
+        return 'JPEG';
+      case 'doc':
+        return 'DOC';
+      case 'docx':
+        return 'DOCX';
+      default:
+        return 'PDF'; // Default to PDF for backward compatibility
+    }
+  }
+
+  String _validateFileFormat(Uint8List bytes, String extension) {
+    if (bytes.length < 4) {
+      throw Exception('File too small to be valid');
+    }
+
+    // Get first few bytes for magic number validation
+    List<int> header = bytes.take(10).toList();
+    String headerStr = String.fromCharCodes(bytes.take(4));
+
+    switch (extension) {
+      case 'pdf':
+        if (!headerStr.startsWith('%PDF')) {
+          throw Exception('Invalid PDF file (header: $headerStr)');
+        }
+        return 'PDF';
+
+      case 'png':
+        // PNG magic number: 89 50 4E 47 0D 0A 1A 0A
+        if (!(header[0] == 0x89 &&
+            header[1] == 0x50 &&
+            header[2] == 0x4E &&
+            header[3] == 0x47)) {
+          throw Exception('Invalid PNG file');
+        }
+        return 'PNG';
+
+      case 'jpg':
+      case 'jpeg':
+        // JPEG magic number: FF D8 FF
+        if (!(header[0] == 0xFF && header[1] == 0xD8 && header[2] == 0xFF)) {
+          throw Exception('Invalid JPEG file');
+        }
+        return 'JPEG';
+
+      case 'doc':
+        // DOC magic number: D0 CF 11 E0 A1 B1 1A E1 (OLE compound document)
+        if (!(header[0] == 0xD0 &&
+            header[1] == 0xCF &&
+            header[2] == 0x11 &&
+            header[3] == 0xE0)) {
+          throw Exception('Invalid DOC file');
+        }
+        return 'DOC';
+
+      case 'docx':
+        // DOCX magic number: 50 4B (ZIP format)
+        if (!(header[0] == 0x50 && header[1] == 0x4B)) {
+          throw Exception('Invalid DOCX file');
+        }
+        return 'DOCX';
+
+      default:
+        throw Exception('Unsupported file format: $extension');
+    }
+  }
+
   void _showFullScreenPdf() {
     if (pdfUrl.isEmpty) return;
 
@@ -170,7 +257,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
-        return _FullScreenPdfDialog(pdfUrl: pdfUrl);
+        return _FullScreenFileDialog(fileUrl: pdfUrl, fileType: fileType);
       },
     );
   }
@@ -178,7 +265,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> uploadEP() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ['pdf'], // Only allow PDF files as per API requirement
+      allowedExtensions: [
+        'pdf',
+        'png',
+        'jpg',
+        'jpeg',
+        'doc',
+        'docx'
+      ], // Support multiple file types
     );
 
     if (result != null) {
@@ -224,17 +318,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         // Create html.File from bytes for web
         Uint8List bytes = file.bytes!;
 
-        // Validate PDF magic bytes before upload
-        if (bytes.length < 4) {
-          throw Exception('File too small to be a valid PDF');
-        }
+        // Validate file format based on extension and magic bytes
+        String extension = file.extension?.toLowerCase() ?? '';
+        String fileType = _validateFileFormat(bytes, extension);
 
-        String header = String.fromCharCodes(bytes.take(4));
-        if (!header.startsWith('%PDF')) {
-          throw Exception('Selected file is not a valid PDF (header: $header)');
-        }
-
-        logger.d('PDF validation passed. Header: $header');
+        logger.d('File validation passed. Type: $fileType');
         logger.d('Bytes length: ${bytes.length}');
 
         setState(() {
@@ -637,13 +725,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
       );
-    } else if (pdfPinchController != null) {
-      // Show PDF viewer
+    } else if (pdfUrl.isNotEmpty) {
+      // Show appropriate viewer based on file type
       return ClipRRect(
         borderRadius: BorderRadius.circular(8),
-        child: PdfViewPinch(
-          controller: pdfPinchController!,
-        ),
+        child: _buildFileViewer(),
       );
     } else {
       // Show empty state
@@ -667,7 +753,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             SizedBox(height: 8),
             Text(
-              'Upload a PDF to see preview',
+              'Upload a file to see preview\n(PDF, PNG, JPEG, DOC, DOCX)',
               style: TextStyle(
                 color: Color(0xFF004283),
                 fontSize: 12,
@@ -677,6 +763,110 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
       );
+    }
+  }
+
+  Widget _buildFileViewer() {
+    switch (fileType) {
+      case 'PDF':
+        if (pdfPinchController != null) {
+          return PdfViewPinch(controller: pdfPinchController!);
+        } else {
+          return const Center(
+            child: CircularProgressIndicator(color: Color(0xFF004283)),
+          );
+        }
+
+      case 'PNG':
+      case 'JPEG':
+        return Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Image.network(
+            pdfUrl,
+            fit: BoxFit.contain,
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return const Center(
+                child: CircularProgressIndicator(color: Color(0xFF004283)),
+              );
+            },
+            errorBuilder: (context, error, stackTrace) {
+              return const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error, size: 48, color: Colors.red),
+                    SizedBox(height: 8),
+                    Text('Failed to load image',
+                        style: TextStyle(color: Colors.red)),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+
+      case 'DOC':
+      case 'DOCX':
+        return Container(
+          width: double.infinity,
+          height: double.infinity,
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.description,
+                size: 64,
+                color: Color(0xFF004283),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                '$fileType Document',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF004283),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Click download to view document',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF004283),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () {
+                  // Open document in new tab
+                  html.window.open(pdfUrl, '_blank');
+                },
+                icon: const Icon(Icons.download, size: 18),
+                label: const Text('Download/View'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF004283),
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        );
+
+      default:
+        return const Center(
+          child: Text(
+            'Unsupported file type',
+            style: TextStyle(color: Color(0xFF004283)),
+          ),
+        );
     }
   }
 
@@ -745,16 +935,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-class _FullScreenPdfDialog extends StatefulWidget {
-  final String pdfUrl;
+class _FullScreenFileDialog extends StatefulWidget {
+  final String fileUrl;
+  final String fileType;
 
-  const _FullScreenPdfDialog({required this.pdfUrl});
+  const _FullScreenFileDialog({required this.fileUrl, required this.fileType});
 
   @override
-  State<_FullScreenPdfDialog> createState() => _FullScreenPdfDialogState();
+  State<_FullScreenFileDialog> createState() => _FullScreenFileDialogState();
 }
 
-class _FullScreenPdfDialogState extends State<_FullScreenPdfDialog> {
+class _FullScreenFileDialogState extends State<_FullScreenFileDialog> {
   PdfControllerPinch? fullScreenController;
   bool isLoading = true;
   String? errorMessage;
@@ -767,11 +958,22 @@ class _FullScreenPdfDialogState extends State<_FullScreenPdfDialog> {
 
   Future<void> _loadPdfForFullScreen() async {
     try {
-      logger.d('Loading PDF for full screen: ${widget.pdfUrl}');
+      logger.d('Loading ${widget.fileType} for full screen: ${widget.fileUrl}');
+
+      // Skip loading for non-PDF files
+      if (widget.fileType != 'PDF') {
+        if (mounted) {
+          setState(() {
+            isLoading = false;
+            errorMessage = null;
+          });
+        }
+        return;
+      }
 
       // Fetch PDF bytes
       final response = await http.get(
-        Uri.parse(widget.pdfUrl),
+        Uri.parse(widget.fileUrl),
         headers: {
           'Accept': 'application/pdf,*/*',
           'User-Agent': 'QIoT-Admin-Dashboard/1.0',
@@ -853,9 +1055,9 @@ class _FullScreenPdfDialogState extends State<_FullScreenPdfDialog> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Educational Plan - Full View',
-                    style: TextStyle(
+                  Text(
+                    'Educational Plan - Full View (${widget.fileType})',
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -954,18 +1156,113 @@ class _FullScreenPdfDialogState extends State<_FullScreenPdfDialog> {
           ],
         ),
       );
-    } else if (fullScreenController != null) {
-      return PdfViewPinch(controller: fullScreenController!);
     } else {
-      return const Center(
-        child: Text(
-          'No PDF available',
-          style: TextStyle(
-            color: Color(0xFF004283),
-            fontSize: 16,
-          ),
-        ),
-      );
+      // Show appropriate viewer based on file type
+      switch (widget.fileType) {
+        case 'PDF':
+          if (fullScreenController != null) {
+            return PdfViewPinch(controller: fullScreenController!);
+          } else {
+            return const Center(
+              child: Text(
+                'No PDF available',
+                style: TextStyle(
+                  color: Color(0xFF004283),
+                  fontSize: 16,
+                ),
+              ),
+            );
+          }
+
+        case 'PNG':
+        case 'JPEG':
+          return Container(
+            width: double.infinity,
+            height: double.infinity,
+            child: Image.network(
+              widget.fileUrl,
+              fit: BoxFit.contain,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return const Center(
+                  child: CircularProgressIndicator(color: Color(0xFF004283)),
+                );
+              },
+              errorBuilder: (context, error, stackTrace) {
+                return const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error, size: 64, color: Colors.red),
+                      SizedBox(height: 16),
+                      Text('Failed to load image',
+                          style: TextStyle(color: Colors.red, fontSize: 16)),
+                    ],
+                  ),
+                );
+              },
+            ),
+          );
+
+        case 'DOC':
+        case 'DOCX':
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.description,
+                  size: 80,
+                  color: Color(0xFF004283),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  '${widget.fileType} Document',
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF004283),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Click below to download and view the document',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFF004283),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    html.window.open(widget.fileUrl, '_blank');
+                  },
+                  icon: const Icon(Icons.download, size: 24),
+                  label: const Text('Download/View',
+                      style: TextStyle(fontSize: 16)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF004283),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 12),
+                  ),
+                ),
+              ],
+            ),
+          );
+
+        default:
+          return const Center(
+            child: Text(
+              'Unsupported file type',
+              style: TextStyle(
+                color: Color(0xFF004283),
+                fontSize: 16,
+              ),
+            ),
+          );
+      }
     }
   }
 }
