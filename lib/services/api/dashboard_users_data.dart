@@ -10,6 +10,39 @@ import 'package:qiot_admin/main.dart';
 import 'package:qiot_admin/services/api/authentication.dart';
 
 class DashboardUsersData {
+  static Future<Map<String, dynamic>?> getFlaggedUsers() async {
+    var headers = {
+      'Authorization':
+          'Bearer ${await SessionStorageHelpers.getStorage('accessToken')}',
+    };
+
+    var request =
+        http.Request('GET', Uri.parse('${ApiConstants.baseURL}/admin/flagged-users'));
+    request.headers.addAll(headers);
+
+    try {
+      http.StreamedResponse response = await request.send();
+      String responseBody = await response.stream.bytesToString();
+
+      if (response.statusCode == 200) {
+        if (responseBody.isNotEmpty) {
+          Map<String, dynamic>? jsonResponse = json.decode(responseBody);
+          logger.d('Flagged users response: $jsonResponse');
+          return jsonResponse;
+        } else {
+          logger.d('Response body is empty or null');
+          return null;
+        }
+      } else {
+        logger.d("error: ${response.reasonPhrase}");
+        return null;
+      }
+    } catch (e) {
+      logger.d('error: Failed to make HTTP request: $e');
+      return null;
+    }
+  }
+
   static Future<Map<String, dynamic>?> getAllUsersData() async {
     var headers = {
       // 'Content-Type': 'application/json',

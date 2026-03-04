@@ -8,6 +8,7 @@ import 'package:qiot_admin/data/top_menu_data.dart';
 import 'package:qiot_admin/helpers/session_storage_helpers.dart';
 import 'package:qiot_admin/main.dart';
 import 'package:qiot_admin/screens/add_users_screen.dart';
+import 'package:qiot_admin/screens/flagged_users_screen.dart';
 import 'package:qiot_admin/screens/notifications_screen.dart';
 import 'package:qiot_admin/screens/user_list_screen.dart';
 import 'package:qiot_admin/services/api/authentication.dart';
@@ -928,8 +929,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       case 0:
         return const UserListScreen();
       case 1:
-        return const NotificationsScreen();
+        return const FlaggedUsersScreen();
       case 2:
+        return const NotificationsScreen();
+      case 3:
         return const AddUsersScreen();
     }
     return const UserListScreen();
