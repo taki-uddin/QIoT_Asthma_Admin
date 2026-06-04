@@ -37,7 +37,10 @@ import 'package:qiot_admin/screens/user_details/widgets/peakflow_widgets/peakflo
 import 'package:qiot_admin/screens/user_details/widgets/peakflow_widgets/reloadable_chart.dart';
 import 'package:qiot_admin/screens/user_details/widgets/steroid_widgets/steroiddose_reloadable_chart.dart';
 import 'package:qiot_admin/screens/user_details/widgets/steroid_widgets/steroiddose_report_table.dart';
+import 'package:qiot_admin/screens/user_details/widgets/child_account_admin_panel.dart';
 import 'package:qiot_admin/services/api/dashboard_users_data.dart';
+import 'package:qiot_admin/widgets/admin_app_bar.dart';
+import 'package:qiot_admin/widgets/admin_shell.dart';
 import 'package:qiot_admin/widgets/admin_app_bar.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -104,7 +107,11 @@ class _UserDetailsState extends State<UserDetails> {
   bool diurinal = false;
   bool fitnessStress = false;
 
+  Map<String, dynamic>? childHealthScorePayload;
+  bool isLoadingChildHealth = false;
+
   bool get _hasLinkedParent {
+    if (userData['isChildAccount'] == true) return true;
     final parentId = userData['parentID']?.toString().trim() ?? '';
     return parentId.isNotEmpty;
   }
@@ -135,15 +142,52 @@ class _UserDetailsState extends State<UserDetails> {
     DashboardUsersData.getUserByIdData(userId).then(
       (value) async {
         if (value != null) {
+          var payload =
+              Map<String, dynamic>.from(value['payload'] as Map<String, dynamic>);
+
+          if ((payload['parentID']?.toString().trim() ?? '').isEmpty) {
+            final resolved =
+                await DashboardUsersData.resolveParentForChild(userId);
+            if (resolved != null) {
+              payload.addAll(resolved);
+              payload['isChildAccount'] = true;
+            }
+          }
+
           setState(() {
-            userData = value['payload'];
+            userData = payload;
             hasData = true;
           });
+
+          if (_hasLinkedParent) {
+            _loadChildHealthScore();
+          }
         } else {
           logger.d('Failed to get user data');
         }
       },
     );
+  }
+
+  Future<void> _loadChildHealthScore() async {
+    final parentId = userData['parentID']?.toString().trim() ?? '';
+    if (parentId.isEmpty) return;
+
+    setState(() {
+      isLoadingChildHealth = true;
+    });
+
+    final response = await DashboardUsersData.getChildHealthScore(
+      parentId,
+      userId,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      childHealthScorePayload = response?['payload'] as Map<String, dynamic>?;
+      isLoadingChildHealth = false;
+    });
   }
 
   Future<void> _getPeakflowHistory(int currentMonth, int currentYear) async {
@@ -1176,13 +1220,12 @@ class _UserDetailsState extends State<UserDetails> {
     final Size screenSize = MediaQuery.of(context).size;
     final returnTab = AdminAppBar.returnTabFromContext(context);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF9F9FB),
-      appBar: AdminAppBar(
-        title: hasData ? _userDisplayName : 'User details',
-        subtitle: hasData && _hasLinkedParent ? 'Child account' : null,
-        returnTab: returnTab,
-      ),
+    return AdminShell(
+      pageTitle: hasData ? _userDisplayName : 'User details',
+      pageSubtitle: hasData && _hasLinkedParent ? 'Child account' : null,
+      showBackButton: true,
+      returnTab: returnTab,
+      selectedMenuIndex: returnTab,
       body: hasData == false
           ? const Center(
               child: CircularProgressIndicator(),
@@ -1190,58 +1233,58 @@ class _UserDetailsState extends State<UserDetails> {
           : LayoutBuilder(
         builder: (context, constraints) {
           final contentHeight = constraints.maxHeight;
+          final leftWidth = _hasLinkedParent
+              ? screenSize.width * 0.22
+              : screenSize.width * 0.16;
+          final middleWidth = _hasLinkedParent
+              ? screenSize.width * 0.58
+              : screenSize.width * 0.64;
           return Container(
                 padding: EdgeInsets.all(screenSize.width * 0.02),
                 child: Center(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Left Container
                       SizedBox(
-                        width: screenSize.width * 0.16,
+                        width: leftWidth,
                         height: contentHeight,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Name: ${userData['firstName']} ${userData['lastName']}',
-                              style: GoogleFonts.manrope(
-                                fontSize: 18,
-                                letterSpacing: -.4,
-                                height: 0,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            if (_hasLinkedParent) ...[
-                              const SizedBox(height: 8),
-                              InkWell(
-                                onTap: () {
-                                  Navigator.pushNamed(
-                                    context,
-                                    '/usersdetails/${userData['parentID']}',
-                                    arguments: {'returnTab': returnTab},
-                                  );
-                                },
-                                child: Text(
-                                  'Parent: $_parentDisplayName',
-                                  style: GoogleFonts.manrope(
-                                    fontSize: 14,
-                                    letterSpacing: -.2,
-                                    fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF2F80ED),
-                                    decoration: TextDecoration.underline,
-                                  ),
+                        child: SingleChildScrollView(
+                          child: _hasLinkedParent
+                              ? ChildAccountAdminPanel(
+                                  childName: _userDisplayName,
+                                  parentId:
+                                      userData['parentID']?.toString() ?? '',
+                                  parentName: _parentDisplayName,
+                                  healthScorePayload: childHealthScorePayload,
+                                  isLoading: isLoadingChildHealth,
+                                  returnTab: returnTab,
+                                  onOpenParent: () {
+                                    Navigator.pushNamed(
+                                      context,
+                                      '/usersdetails/${userData['parentID']}',
+                                      arguments: {'returnTab': returnTab},
+                                    );
+                                  },
+                                )
+                              : Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Name: ${userData['firstName']} ${userData['lastName']}',
+                                      style: GoogleFonts.manrope(
+                                        fontSize: 18,
+                                        letterSpacing: -.4,
+                                        height: 0,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                            ],
-                          ],
                         ),
                       ),
-                      // Middle Container
                       SizedBox(
-                        width: screenSize.width * 0.64,
+                        width: middleWidth,
                         height: contentHeight,
                         child: SingleChildScrollView(
                           physics: const AlwaysScrollableScrollPhysics(),

@@ -81,6 +81,52 @@ class DashboardUsersData {
     }
   }
 
+  static Future<Map<String, dynamic>?> getChildHealthScore(
+    String parentId,
+    String childId,
+  ) async {
+    final token = await SessionStorageHelpers.getStorage('accessToken');
+    final uri = Uri.parse(
+      '${ApiConstants.baseURL}/user/$parentId/children/$childId/health-score',
+    );
+    try {
+      final response = await http.get(
+        uri,
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (response.statusCode == 200 && response.body.isNotEmpty) {
+        return json.decode(response.body) as Map<String, dynamic>;
+      }
+      logger.d('Child health score error: ${response.statusCode}');
+      return null;
+    } catch (e) {
+      logger.d('Failed to fetch child health score: $e');
+      return null;
+    }
+  }
+
+  /// Resolve parent when child document has empty parentID but parent lists this child.
+  static Future<Map<String, String>?> resolveParentForChild(String childId) async {
+    final all = await getAllUsersData();
+    final users = all?['payload'];
+    if (users is! List) return null;
+
+    for (final user in users) {
+      final children = user['children'];
+      if (children is! List) continue;
+      for (final child in children) {
+        if (child['childID']?.toString() == childId) {
+          return {
+            'parentID': user['_id']?.toString() ?? '',
+            'parentFirstName': user['firstName']?.toString() ?? '',
+            'parentLastName': user['lastName']?.toString() ?? '',
+          };
+        }
+      }
+    }
+    return null;
+  }
+
   static Future<Map<String, dynamic>?> getUserByIdData(String userId) async {
     var headers = {
       // 'Content-Type': 'application/json',
