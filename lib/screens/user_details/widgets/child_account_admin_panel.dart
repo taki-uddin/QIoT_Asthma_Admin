@@ -110,6 +110,16 @@ class ChildAccountAdminPanel extends StatelessWidget {
                           healthScorePayload!['healthScore'],
                           highlight: true,
                         ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Starts at 5 and subtracts penalties from ACT, fitness, '
+                          'stress, and peak flow. Not an average of the rows below.',
+                          style: GoogleFonts.manrope(
+                            fontSize: 11,
+                            fontStyle: FontStyle.italic,
+                            color: Colors.grey[600],
+                          ),
+                        ),
                         const Divider(height: 20),
                         _scoreRow(
                           'Asthma control (ACT)',
