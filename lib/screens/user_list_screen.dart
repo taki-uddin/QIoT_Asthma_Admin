@@ -268,7 +268,10 @@ class _UserListScreenState extends State<UserListScreen> {
                         Navigator.pushNamed(
                           context,
                           '/usersdetails/${filteredUserData[index]['_id']}',
-                          arguments: {'id': '${filteredUserData[index]['_id']}'},
+                          arguments: {
+                            'id': '${filteredUserData[index]['_id']}',
+                            'returnTab': 0,
+                          },
                         );
                       },
                       child: MouseRegion(

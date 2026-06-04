@@ -257,7 +257,7 @@ class _FlaggedUsersScreenState extends State<FlaggedUsersScreen> {
             Navigator.pushNamed(
               context,
               '/usersdetails/${user['_id']}',
-              arguments: {'id': '${user['_id']}'},
+              arguments: {'id': '${user['_id']}', 'returnTab': 1},
             );
           },
           child: Container(
@@ -416,7 +416,7 @@ class _FlaggedUsersScreenState extends State<FlaggedUsersScreen> {
                       Navigator.pushNamed(
                         context,
                         '/usersdetails/${user['_id']}',
-                        arguments: {'id': '${user['_id']}'},
+                        arguments: {'id': '${user['_id']}', 'returnTab': 1},
                       );
                     },
                     icon: const Icon(Icons.arrow_forward_ios,

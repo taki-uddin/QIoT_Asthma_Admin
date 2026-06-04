@@ -21,14 +21,20 @@ import 'package:qiot_admin/main.dart';
 
 class DashboardScreen extends StatefulWidget {
   final FluroRouter router;
-  const DashboardScreen({super.key, required this.router});
+  final int initialTab;
+
+  const DashboardScreen({
+    super.key,
+    required this.router,
+    this.initialTab = 0,
+  });
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
   final data = TopMenuData();
   html.File? _selectedFile;
   String pdfUrl = '';
@@ -40,6 +46,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
+    _selectedIndex = widget.initialTab.clamp(0, 3);
     getpdfUrl();
   }
 
@@ -397,6 +404,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return SafeArea(
       child: Scaffold(
         backgroundColor: const Color(0xFFF9F9FB),
+        appBar: AppBar(
+          backgroundColor: const Color(0xFF004283),
+          foregroundColor: Colors.white,
+          elevation: 1,
+          automaticallyImplyLeading: false,
+          title: Text(
+            data.menu[_selectedIndex].title,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
         body: SizedBox(
           width: screenSize.width,
           height: screenSize.height,

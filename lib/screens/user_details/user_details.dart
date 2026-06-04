@@ -38,6 +38,7 @@ import 'package:qiot_admin/screens/user_details/widgets/peakflow_widgets/reloada
 import 'package:qiot_admin/screens/user_details/widgets/steroid_widgets/steroiddose_reloadable_chart.dart';
 import 'package:qiot_admin/screens/user_details/widgets/steroid_widgets/steroiddose_report_table.dart';
 import 'package:qiot_admin/services/api/dashboard_users_data.dart';
+import 'package:qiot_admin/widgets/admin_app_bar.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -1163,19 +1164,33 @@ class _UserDetailsState extends State<UserDetails> {
     );
   }
 
+  String get _userDisplayName {
+    final first = userData['firstName']?.toString().trim() ?? '';
+    final last = userData['lastName']?.toString().trim() ?? '';
+    final name = '$first $last'.trim();
+    return name.isNotEmpty ? name : 'User details';
+  }
+
   @override
   Widget build(BuildContext context) {
     final Size screenSize = MediaQuery.of(context).size;
+    final returnTab = AdminAppBar.returnTabFromContext(context);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9FB),
-      body: SizedBox(
-        width: screenSize.width,
-        height: screenSize.height,
-        child: hasData == false // Check if the data is available
-            ? const Center(
-                child: CircularProgressIndicator(),
-              )
-            : Container(
+      appBar: AdminAppBar(
+        title: hasData ? _userDisplayName : 'User details',
+        subtitle: hasData && _hasLinkedParent ? 'Child account' : null,
+        returnTab: returnTab,
+      ),
+      body: hasData == false
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : LayoutBuilder(
+        builder: (context, constraints) {
+          final contentHeight = constraints.maxHeight;
+          return Container(
                 padding: EdgeInsets.all(screenSize.width * 0.02),
                 child: Center(
                   child: Row(
@@ -1185,7 +1200,7 @@ class _UserDetailsState extends State<UserDetails> {
                       // Left Container
                       SizedBox(
                         width: screenSize.width * 0.16,
-                        height: screenSize.height,
+                        height: contentHeight,
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.start,
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1206,6 +1221,7 @@ class _UserDetailsState extends State<UserDetails> {
                                   Navigator.pushNamed(
                                     context,
                                     '/usersdetails/${userData['parentID']}',
+                                    arguments: {'returnTab': returnTab},
                                   );
                                 },
                                 child: Text(
@@ -1226,7 +1242,7 @@ class _UserDetailsState extends State<UserDetails> {
                       // Middle Container
                       SizedBox(
                         width: screenSize.width * 0.64,
-                        height: screenSize.height,
+                        height: contentHeight,
                         child: SingleChildScrollView(
                           physics: const AlwaysScrollableScrollPhysics(),
                           child: Column(
@@ -2262,12 +2278,13 @@ class _UserDetailsState extends State<UserDetails> {
                       // Left Container
                       SizedBox(
                         width: screenSize.width * 0.16,
-                        height: screenSize.height,
+                        height: contentHeight,
                       ),
                     ],
                   ),
                 ),
-              ),
+              );
+        },
       ),
     );
   }

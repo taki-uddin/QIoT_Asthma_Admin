@@ -1,4 +1,5 @@
 import 'package:fluro/fluro.dart';
+import 'package:flutter/material.dart';
 import 'package:qiot_admin/main.dart';
 import 'package:qiot_admin/screens/dashboard_screen/dashboard_screen.dart';
 import 'package:qiot_admin/screens/authentication_screens/signin_screen.dart';
@@ -17,8 +18,16 @@ void defineRoutes(FluroRouter router) {
     '/dashboard',
     handler: Handler(
       handlerFunc: (context, params) {
+        int initialTab = 0;
+        if (context != null) {
+          final args = ModalRoute.of(context)?.settings.arguments;
+          if (args is Map && args['initialTab'] is int) {
+            initialTab = args['initialTab'] as int;
+          }
+        }
         return DashboardScreen(
           router: router,
+          initialTab: initialTab,
         );
       },
     ),
