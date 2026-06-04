@@ -103,6 +103,17 @@ class _UserDetailsState extends State<UserDetails> {
   bool diurinal = false;
   bool fitnessStress = false;
 
+  bool get _hasLinkedParent {
+    final parentId = userData['parentID']?.toString().trim() ?? '';
+    return parentId.isNotEmpty;
+  }
+
+  String get _parentDisplayName {
+    final first = userData['parentFirstName']?.toString().trim() ?? '';
+    final last = userData['parentLastName']?.toString().trim() ?? '';
+    final name = '$first $last'.trim();
+    return name.isNotEmpty ? name : 'View parent account';
+  }
 
   @override
   void initState() {
@@ -1180,7 +1191,7 @@ class _UserDetailsState extends State<UserDetails> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Name: ${userData['firstName']} ${userData['lastName']}', // Display the user Name
+                              'Name: ${userData['firstName']} ${userData['lastName']}',
                               style: GoogleFonts.manrope(
                                 fontSize: 18,
                                 letterSpacing: -.4,
@@ -1188,6 +1199,27 @@ class _UserDetailsState extends State<UserDetails> {
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
+                            if (_hasLinkedParent) ...[
+                              const SizedBox(height: 8),
+                              InkWell(
+                                onTap: () {
+                                  Navigator.pushNamed(
+                                    context,
+                                    '/usersdetails/${userData['parentID']}',
+                                  );
+                                },
+                                child: Text(
+                                  'Parent: $_parentDisplayName',
+                                  style: GoogleFonts.manrope(
+                                    fontSize: 14,
+                                    letterSpacing: -.2,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF2F80ED),
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ),
