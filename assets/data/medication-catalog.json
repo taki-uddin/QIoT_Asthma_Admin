@@ -1,0 +1,76 @@
+{
+  "version": "1.0.0",
+  "preventerInhalers": [
+    {
+      "id": "clenil_modulite",
+      "name": "Clenil Modulite",
+      "strengths": ["50mcg", "100mcg", "200mcg"]
+    },
+    {
+      "id": "flixotide",
+      "name": "Flixotide",
+      "strengths": ["50mcg", "125mcg", "250mcg"]
+    },
+    {
+      "id": "seretide",
+      "name": "Seretide",
+      "strengths": ["50mcg", "125mcg"]
+    },
+    {
+      "id": "relvar",
+      "name": "Relvar",
+      "strengths": ["92/22", "184/22"]
+    },
+    {
+      "id": "symbicort",
+      "name": "Symbicort",
+      "strengths": ["100/6", "200/6"]
+    },
+    {
+      "id": "other",
+      "name": "Other (not listed)",
+      "strengths": [],
+      "allowCustomStrength": true
+    }
+  ],
+  "relieverInhalers": [
+    {
+      "id": "salbutamol",
+      "name": "Salbutamol",
+      "strengths": ["100mcg"]
+    },
+    {
+      "id": "other",
+      "name": "Other (not listed)",
+      "strengths": [],
+      "allowCustomStrength": true
+    }
+  ],
+  "oralMedications": [
+    {
+      "id": "montelukast",
+      "name": "Montelukast",
+      "strengths": ["4mg", "5mg", "10mg"],
+      "variableDose": false
+    },
+    {
+      "id": "prednisolone",
+      "name": "Prednisolone",
+      "strengths": [],
+      "variableDose": true
+    },
+    {
+      "id": "uniphyllin",
+      "name": "Uniphyllin",
+      "strengths": [],
+      "variableDose": true
+    },
+    {
+      "id": "other",
+      "name": "Other (not listed)",
+      "strengths": [],
+      "variableDose": true,
+      "allowCustomStrength": true
+    }
+  ]
+}

@@ -1027,6 +1027,35 @@ class DashboardUsersData {
     }
   }
 
+  static Future<Map<String, dynamic>?> updateUserDataById(
+    String userId,
+    Map<String, dynamic> body,
+  ) async {
+    final token = await SessionStorageHelpers.getStorage('accessToken');
+    try {
+      final response = await http.put(
+        Uri.parse('${ApiConstants.baseURL}/user/$userId/update'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode(body),
+      );
+
+      if (response.body.isEmpty) {
+        await _rejectIfUnauthorized(response.statusCode);
+        return null;
+      }
+
+      final decoded = json.decode(response.body) as Map<String, dynamic>;
+      await _rejectIfUnauthorized(response.statusCode);
+      return decoded;
+    } catch (e) {
+      logger.d('Failed to update user data: $e');
+      return null;
+    }
+  }
+
   static Future<Map<String, dynamic>> createAdultPatient(
     Map<String, dynamic> body,
   ) async {
@@ -1063,6 +1092,12 @@ class DashboardUsersData {
   }
 
   /// Adult accounts suitable as guardians (have email, not a child profile).
+  static bool isAdultPatient(Map<dynamic, dynamic> user) {
+    final email = user['email']?.toString().trim() ?? '';
+    final parentId = user['parentID']?.toString().trim() ?? '';
+    return email.isNotEmpty && parentId.isEmpty;
+  }
+
   static List<Map<String, dynamic>> filterGuardianCandidates(
     List<dynamic> users,
   ) {

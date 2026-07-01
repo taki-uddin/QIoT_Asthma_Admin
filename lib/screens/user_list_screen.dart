@@ -1,9 +1,9 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:qiot_admin/main.dart';
+import 'package:qiot_admin/screens/edit_adult_patient_screen.dart';
 import 'package:qiot_admin/services/api/dashboard_users_data.dart';
-import 'dart:html' as html;
+import 'package:qiot_admin/utils/asthma_action_plan_upload.dart';
 
 class UserListScreen extends StatefulWidget {
   const UserListScreen({Key? key}) : super(key: key);
@@ -15,11 +15,11 @@ class UserListScreen extends StatefulWidget {
 class _UserListScreenState extends State<UserListScreen> {
   List<dynamic> userData = [];
   List<dynamic> filteredUserData = [];
-  html.File? _selectedFile;
   int _hoverIndex = -1;
   // ignore: unused_field
   String _searchQuery = '';
   final Set<String> _statusUpdatingIds = {};
+  final Set<String> _planUploadingIds = {};
 
   @override
   void initState() {
@@ -27,34 +27,66 @@ class _UserListScreenState extends State<UserListScreen> {
     _getAllUsersData();
   }
 
-  Future<void> uploadUserAAP(String userId) async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
+  void _syncUserField(String userId, String field, dynamic value) {
+    for (final list in [userData, filteredUserData]) {
+      for (final user in list) {
+        if (user['_id'] == userId) {
+          user[field] = value;
+        }
+      }
+    }
+  }
+
+  Future<void> _uploadUserAAP(
+    Map<dynamic, dynamic> user,
+    String userId,
+  ) async {
+    if (_planUploadingIds.contains(userId)) return;
+
+    setState(() => _planUploadingIds.add(userId));
+    try {
+      final url = await AsthmaActionPlanUpload.pickAndUpload(userId);
+      if (!mounted) return;
+      if (url != null) {
+        setState(() => _syncUserField(userId, 'asthmaActionPlan', url));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Asthma action plan uploaded')),
+        );
+      }
+    } on AsthmaActionPlanUploadException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to upload asthma action plan')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _planUploadingIds.remove(userId));
+      }
+    }
+  }
+
+  Future<void> _openEditAdult(Map<dynamic, dynamic> user, String userId) async {
+    if (!DashboardUsersData.isAdultPatient(user)) return;
+
+    final updated = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EditAdultPatientScreen(
+          userId: userId,
+          initialUser: Map<String, dynamic>.from(user),
+        ),
+      ),
     );
 
-    if (result != null) {
-      PlatformFile file = result.files.single;
-
-      List<int> bytes = file.bytes!.toList();
-
-      setState(() {
-        _selectedFile = html.File(bytes, file.name);
-      });
-
-      try {
-        final Map<String, dynamic>? uploadUserAAP = await DashboardUsersData()
-            .uploadUsersAsthmaActionPlan(_selectedFile!, userId);
-        if (uploadUserAAP != null) {
-          logger.d('Your Asthma Action Plan has been uploaded!');
-        } else {
-          logger.d('Failed to upload Asthma Action Plan');
-        }
-      } catch (e) {
-        logger.d('Error: $e');
-      }
-    } else {
-      logger.d('No file selected');
+    if (updated == true) {
+      _getAllUsersData();
     }
   }
 
@@ -98,7 +130,10 @@ class _UserListScreenState extends State<UserListScreen> {
     }
   }
 
-  Future<void> _toggleUserStatus(Map<dynamic, dynamic> user, bool enabled) async {
+  Future<void> _toggleUserStatus(
+    Map<dynamic, dynamic> user,
+    bool enabled,
+  ) async {
     final userId = user['_id'] as String;
     if (_statusUpdatingIds.contains(userId)) return;
 
@@ -126,9 +161,7 @@ class _UserListScreenState extends State<UserListScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            enabled
-                ? 'Failed to enable user'
-                : 'Failed to disable user',
+            enabled ? 'Failed to enable user' : 'Failed to disable user',
           ),
         ),
       );
@@ -278,6 +311,10 @@ class _UserListScreenState extends State<UserListScreen> {
                     final user = filteredUserData[index] as Map<dynamic, dynamic>;
                     final userId = user['_id'] as String;
                     final isUpdating = _statusUpdatingIds.contains(userId);
+                    final isUploadingPlan = _planUploadingIds.contains(userId);
+                    final isAdult = DashboardUsersData.isAdultPatient(user);
+                    final hasPlan = AsthmaActionPlanUpload.hasPlan(user);
+                    final planUrl = AsthmaActionPlanUpload.planUrl(user);
 
                     return GestureDetector(
                       onTap: () {
@@ -403,9 +440,7 @@ class _UserListScreenState extends State<UserListScreen> {
                               Expanded(
                                 flex: 2,
                                 child: GestureDetector(
-                                  onTap: () {
-                                    uploadUserAAP(userId);
-                                  },
+                                  onTap: () {},
                                   child: Container(
                                     width: screenSize.width * 0.1,
                                     height: 64,
@@ -418,44 +453,102 @@ class _UserListScreenState extends State<UserListScreen> {
                                       horizontal: 16,
                                     ),
                                     child: Center(
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        children: [
-                                          SvgPicture.asset(
-                                            'assets/svg/personal_plan.svg',
-                                            width: 24,
-                                            height: 24,
-                                          ),
-                                          const Text(
-                                            'Personal Plan',
-                                            textAlign: TextAlign.center,
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.normal,
+                                      child: isUploadingPlan
+                                          ? const SizedBox(
+                                              width: 24,
+                                              height: 24,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
+                                            )
+                                          : Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                GestureDetector(
+                                                  onTap: () => _uploadUserAAP(
+                                                      user, userId),
+                                                  child: Column(
+                                                    children: [
+                                                      SvgPicture.asset(
+                                                        'assets/svg/personal_plan.svg',
+                                                        width: 24,
+                                                        height: 24,
+                                                      ),
+                                                      const Text(
+                                                        'Personal Plan',
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                        style: TextStyle(
+                                                          fontSize: 14,
+                                                          fontWeight:
+                                                              FontWeight.normal,
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        hasPlan
+                                                            ? 'On file'
+                                                            : 'Upload',
+                                                        style: TextStyle(
+                                                          fontSize: 11,
+                                                          color: hasPlan
+                                                              ? const Color(
+                                                                  0xFF27AE60)
+                                                              : Colors.grey,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                if (hasPlan && planUrl != null)
+                                                  TextButton(
+                                                    onPressed: () =>
+                                                        AsthmaActionPlanUpload
+                                                            .openPlan(planUrl),
+                                                    style: TextButton.styleFrom(
+                                                      padding:
+                                                          EdgeInsets.zero,
+                                                      minimumSize:
+                                                          const Size(0, 24),
+                                                      tapTargetSize:
+                                                          MaterialTapTargetSize
+                                                              .shrinkWrap,
+                                                    ),
+                                                    child: const Text(
+                                                      'Open',
+                                                      style: TextStyle(
+                                                        fontSize: 11,
+                                                      ),
+                                                    ),
+                                                  ),
+                                              ],
                                             ),
-                                          ),
-                                        ],
-                                      ),
                                     ),
                                   ),
                                 ),
                               ),
                               Expanded(
                                 flex: 1,
-                                child: SizedBox(
-                                  width: screenSize.width * 0.1,
-                                  height: screenSize.height * 0.04,
-                                  child: const Center(
-                                    child: Text(
-                                      'Edit',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        color: Color(0xFF004283),
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.normal,
+                                child: GestureDetector(
+                                  onTap: () =>
+                                      _openEditAdult(user, userId),
+                                  child: SizedBox(
+                                    width: screenSize.width * 0.1,
+                                    height: screenSize.height * 0.04,
+                                    child: Center(
+                                      child: Text(
+                                        isAdult ? 'Edit' : '—',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: isAdult
+                                              ? const Color(0xFF004283)
+                                              : Colors.grey,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.normal,
+                                          decoration: isAdult
+                                              ? TextDecoration.underline
+                                              : null,
+                                        ),
                                       ),
                                     ),
                                   ),

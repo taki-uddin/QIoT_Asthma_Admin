@@ -65,6 +65,7 @@ flutter:
     - assets/images/appLogo/
     - assets/pdf/
     - assets/svg/
+    - assets/data/medication-catalog.json
   
   
 
