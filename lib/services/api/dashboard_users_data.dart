@@ -992,6 +992,41 @@ class DashboardUsersData {
     }
   }
 
+  static Future<Map<String, dynamic>?> updateUserStatus(
+    String userId,
+    String status,
+  ) async {
+    final token = await SessionStorageHelpers.getStorage('accessToken');
+    try {
+      final response = await http.patch(
+        Uri.parse('${ApiConstants.baseURL}/admin/$userId/status'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode({'status': status}),
+      );
+
+      if (response.body.isEmpty) {
+        await _rejectIfUnauthorized(response.statusCode);
+        return null;
+      }
+
+      final decoded = json.decode(response.body) as Map<String, dynamic>;
+      await _rejectIfUnauthorized(response.statusCode);
+
+      if (response.statusCode == 200) {
+        return decoded;
+      }
+
+      logger.d('updateUserStatus error: ${response.statusCode} $decoded');
+      return null;
+    } catch (e) {
+      logger.d('Failed to update user status: $e');
+      return null;
+    }
+  }
+
   static Future<Map<String, dynamic>> createAdultPatient(
     Map<String, dynamic> body,
   ) async {
