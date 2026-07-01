@@ -123,7 +123,7 @@ class _AddAdultPatientScreenState extends State<AddAdultPatientScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'The patient will receive an email with instructions to set their password in the QIoT app (Forgot Password → verification code → choose password).',
+                        'The patient will receive a welcome email. They should open the QIoT app, tap Forgot Password, enter their email, then use the verification code from that email to set their password.',
                         style: GoogleFonts.manrope(
                           color: WebColors.primaryGreyText,
                           fontSize: 14,

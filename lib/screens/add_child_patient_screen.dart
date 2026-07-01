@@ -386,7 +386,7 @@ class _AddChildPatientScreenState extends State<AddChildPatientScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'A setup email will be sent so the guardian can choose their password in the QIoT app.',
+            'A welcome email will be sent. The guardian sets their password via Forgot Password in the QIoT app.',
             style: GoogleFonts.manrope(
               color: WebColors.primaryGreyText,
               fontSize: 13,
