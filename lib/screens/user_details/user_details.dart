@@ -39,6 +39,7 @@ import 'package:qiot_admin/screens/user_details/widgets/steroid_widgets/steroidd
 import 'package:qiot_admin/screens/user_details/widgets/steroid_widgets/steroiddose_report_table.dart';
 import 'package:qiot_admin/screens/user_details/widgets/child_account_admin_panel.dart';
 import 'package:qiot_admin/services/api/dashboard_users_data.dart';
+import 'package:qiot_admin/utils/effective_recorded_time.dart';
 import 'package:qiot_admin/widgets/admin_app_bar.dart';
 import 'package:qiot_admin/widgets/admin_shell.dart';
 import 'package:qiot_admin/widgets/admin_app_bar.dart';
@@ -202,20 +203,20 @@ class _UserDetailsState extends State<UserDetails> {
       ).then(
         (value) async {
           if (value != null) {
-            // logger.d('value: ${value['payload']}');
-            setState(() {
-              peakflowReportData = value['payload'];
-            });
-            for (var i in peakflowReportData['peakflow']) {
-              peakflowReportChartData.add(
+            final chartRows = <PeakflowReportChartModel>[];
+            final tableRows = <PeakflowReportTableModel>[];
+            for (var i in value['payload']['peakflow']) {
+              final record = Map<String, dynamic>.from(i);
+              final recordedAt = effectiveRecordedAt(record);
+              chartRows.add(
                 PeakflowReportChartModel(
-                  i['createdAt'],
+                  recordedAt,
                   i['peakflowValue'],
                 ),
               );
-              peakflowReportTableData.add(
+              tableRows.add(
                 PeakflowReportTableModel(
-                  i['createdAt'],
+                  recordedAt,
                   i['peakflowValue'],
                   i['highValue'],
                   i['lowValue'],
@@ -224,6 +225,17 @@ class _UserDetailsState extends State<UserDetails> {
                 ),
               );
             }
+            chartRows.sort(
+              (a, b) => compareRecordedAt(a.createdAt, b.createdAt),
+            );
+            tableRows.sort(
+              (a, b) => compareRecordedAt(a.createdAt, b.createdAt),
+            );
+            setState(() {
+              peakflowReportData = value['payload'];
+              peakflowReportChartData = chartRows;
+              peakflowReportTableData = tableRows;
+            });
           } else {
             logger.d('Failed to get user data');
           }
@@ -237,8 +249,6 @@ class _UserDetailsState extends State<UserDetails> {
   Future<void> _getInhalerHistory(int currentMonth, int currentYear) async {
     logger.d('Current Month: $currentMonth, Current Year: $currentYear');
     try {
-      // peakflowReportChartData.clear();
-      // peakflowReportTableData.clear();
       inhalerReportChartData.clear();
       inhalerReportTableData.clear();
       DashboardUsersData.getInhalerhistories(
@@ -248,20 +258,20 @@ class _UserDetailsState extends State<UserDetails> {
       ).then(
         (value) async {
           if (value != null) {
-            // logger.d('value: ${value['payload']}');
-            setState(() {
-              inhalerReportData = value['payload'];
-            });
-            for (var i in inhalerReportData['inhaler']) {
-              inhalerReportChartData.add(
+            final chartRows = <InhalerReportChartModel>[];
+            final tableRows = <InhalerReportTableModel>[];
+            for (var i in value['payload']['inhaler']) {
+              final record = Map<String, dynamic>.from(i);
+              final recordedAt = effectiveRecordedAt(record);
+              chartRows.add(
                 InhalerReportChartModel(
-                  i['createdAt'],
+                  recordedAt,
                   i['inhalerValue'],
                 ),
               );
-              inhalerReportTableData.add(
+              tableRows.add(
                 InhalerReportTableModel(
-                  i['createdAt'],
+                  recordedAt,
                   i['inhalerValue'],
                   i['highValue'],
                   i['lowValue'],
@@ -270,6 +280,17 @@ class _UserDetailsState extends State<UserDetails> {
                 ),
               );
             }
+            chartRows.sort(
+              (a, b) => compareRecordedAt(a.createdAt, b.createdAt),
+            );
+            tableRows.sort(
+              (a, b) => compareRecordedAt(a.createdAt, b.createdAt),
+            );
+            setState(() {
+              inhalerReportData = value['payload'];
+              inhalerReportChartData = chartRows;
+              inhalerReportTableData = tableRows;
+            });
           } else {
             logger.d('Failed to get user data');
           }

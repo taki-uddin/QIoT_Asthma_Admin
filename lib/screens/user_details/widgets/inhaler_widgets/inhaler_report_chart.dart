@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:qiot_admin/constants/web_colors.dart';
 import 'package:qiot_admin/main.dart';
 import 'package:qiot_admin/models/inhaler_report_model/inhaler_chart_model.dart';
+import 'package:qiot_admin/utils/effective_recorded_time.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
 class InhalerReportChart extends StatefulWidget {
@@ -23,19 +24,14 @@ class InhalerReportChart extends StatefulWidget {
 }
 
 class _InhalerReportChartState extends State<InhalerReportChart> {
-  String formatDate(String dateString) {
-    DateTime dateTime = DateTime.parse(dateString);
-    DateFormat formatter = DateFormat('dd MMM');
-    return formatter.format(dateTime);
+  String _formatTooltipDate(String dateString) {
+    final dateTime = parseRecordedAt(dateString);
+    return DateFormat('dd MMM yyyy, hh:mm a').format(dateTime);
   }
 
   @override
   Widget build(BuildContext context) {
-    final double screenRatio =
-        MediaQuery.of(context).size.height / MediaQuery.of(context).size.width;
-
     logger.d('Inhaler: ${widget.hasData}');
-    // double salbutomalDosage = double.parse(widget.salbutomalDosage);
     return !widget.hasData
         ? Center(
             child: Text(
@@ -52,18 +48,17 @@ class _InhalerReportChartState extends State<InhalerReportChart> {
               enablePanning: true,
             ),
             enableAxisAnimation: true,
-            primaryXAxis: CategoryAxis(
-              autoScrollingDelta: 7,
-              autoScrollingMode: AutoScrollingMode.end,
-              labelRotation: 300,
+            primaryXAxis: DateTimeAxis(
+              dateFormat: DateFormat('dd MMM\nhh a'),
+              intervalType: DateTimeIntervalType.auto,
+              labelRotation: -45,
               edgeLabelPlacement: EdgeLabelPlacement.shift,
-              labelStyle: TextStyle(
+              labelStyle: const TextStyle(
                 fontSize: 12,
                 color: Colors.black,
               ),
             ),
             primaryYAxis: NumericAxis(
-              // Changed from CategoryAxis to NumericAxis
               title: AxisTitle(text: 'Inhaler Value'),
               minimum: 0,
               maximum: 20,
@@ -90,22 +85,20 @@ class _InhalerReportChartState extends State<InhalerReportChart> {
               header: 'Inhaler',
             ),
             onTooltipRender: (TooltipArgs args) {
-              // Find the corresponding data point
               final index = args.pointIndex ?? 0;
               final data = widget.inhalerReportChartData?[index.toInt()];
-              double salvalue =
-                  double.parse(widget.salbutomalDosage) * data!.inhalerValue;
+              if (data == null) return;
 
-              if (data != null) {
-                args.text =
-                    'Date: ${formatDate(data.createdAt)}\nInhaler Value: ${data.inhalerValue}\nSalbutamol Dosage: ${salvalue}';
-              }
+              final salvalue =
+                  double.parse(widget.salbutomalDosage) * data.inhalerValue;
+              args.text =
+                  'Date: ${_formatTooltipDate(data.createdAt)}\nInhaler Value: ${data.inhalerValue}\nSalbutamol Dosage: $salvalue';
             },
-            series: <CartesianSeries<InhalerReportChartModel, String>>[
-              LineSeries<InhalerReportChartModel, String>(
+            series: <CartesianSeries<InhalerReportChartModel, DateTime>>[
+              LineSeries<InhalerReportChartModel, DateTime>(
                 dataSource: widget.inhalerReportChartData,
                 xValueMapper: (InhalerReportChartModel inhaler, _) =>
-                    formatDate(inhaler.createdAt),
+                    parseRecordedAt(inhaler.createdAt),
                 yValueMapper: (InhalerReportChartModel inhaler, _) =>
                     inhaler.inhalerValue,
                 markerSettings: const MarkerSettings(isVisible: true),

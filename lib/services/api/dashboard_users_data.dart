@@ -971,4 +971,52 @@ class DashboardUsersData {
       return null;
     }
   }
+
+  static Future<Map<String, dynamic>> createAdultPatient(
+    Map<String, dynamic> body,
+  ) async {
+    final token = await SessionStorageHelpers.getStorage('accessToken');
+    final response = await http.post(
+      Uri.parse('${ApiConstants.baseURL}/admin/users'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: json.encode(body),
+    );
+    final decoded = json.decode(response.body) as Map<String, dynamic>;
+    return {...decoded, 'httpStatus': response.statusCode};
+  }
+
+  static Future<Map<String, dynamic>> addChildToUser(
+    String parentId,
+    Map<String, dynamic> childData,
+  ) async {
+    final token = await SessionStorageHelpers.getStorage('accessToken');
+    final response = await http.post(
+      Uri.parse('${ApiConstants.baseURL}/user/$parentId/children'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: json.encode(childData),
+    );
+    final decoded = json.decode(response.body) as Map<String, dynamic>;
+    return {...decoded, 'httpStatus': response.statusCode};
+  }
+
+  /// Adult accounts suitable as guardians (have email, not a child profile).
+  static List<Map<String, dynamic>> filterGuardianCandidates(
+    List<dynamic> users,
+  ) {
+    return users
+        .whereType<Map>()
+        .map((u) => Map<String, dynamic>.from(u))
+        .where((u) {
+          final email = u['email']?.toString().trim() ?? '';
+          final parentId = u['parentID']?.toString().trim() ?? '';
+          return email.isNotEmpty && parentId.isEmpty;
+        })
+        .toList();
+  }
 }
