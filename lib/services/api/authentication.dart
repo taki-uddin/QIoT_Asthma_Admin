@@ -75,19 +75,25 @@ class Authentication {
     }
   }
 
-  Future<Map<String, dynamic>> refreshToken(String accessToken,
-      String refreshToken, String? deviceToken, String? deviceType) async {
+  static Future<Map<String, dynamic>> refreshToken({
+    required String refreshToken,
+    String? deviceToken,
+    required String deviceType,
+  }) async {
+    final accessToken = await SessionStorageHelpers.getStorage('accessToken');
     var headers = {
       'Content-Type': 'application/json',
-      'Authorization':
-          'Bearer ${await SessionStorageHelpers.getStorage('accessToken')}',
+      if (accessToken != null && accessToken.isNotEmpty)
+        'Authorization': 'Bearer $accessToken',
     };
     var request = http.Request(
-        'POST', Uri.parse('${ApiConstants.baseURL}/auth/refreshtoken'));
+      'POST',
+      Uri.parse('${ApiConstants.baseURL}/auth/refreshtoken'),
+    );
     request.body = json.encode({
-      "refreshToken": refreshToken,
-      "deviceToken": deviceToken,
-      "deviceType": deviceType,
+      'refreshToken': refreshToken,
+      'deviceToken': deviceToken,
+      'deviceType': deviceType,
     });
     request.headers.addAll(headers);
 
@@ -95,16 +101,15 @@ class Authentication {
       http.StreamedResponse response = await request.send();
       String responseBody = await response.stream.bytesToString();
 
-      if (response.statusCode == 200) {
-        if (responseBody.isNotEmpty) {
-          Map<String, dynamic>? jsonResponse = json.decode(responseBody);
-          return {'success': true, 'data': jsonResponse};
-        } else {
-          return {'success': false, 'error': 'Response body is empty or null'};
-        }
-      } else {
-        return {'success': false, 'error': response.reasonPhrase};
+      if (response.statusCode == 200 && responseBody.isNotEmpty) {
+        Map<String, dynamic> jsonResponse = json.decode(responseBody);
+        return {'success': true, 'data': jsonResponse};
       }
+      return {
+        'success': false,
+        'error': response.reasonPhrase,
+        'statusCode': response.statusCode,
+      };
     } catch (e) {
       return {'success': false, 'error': 'Failed to make HTTP request: $e'};
     }

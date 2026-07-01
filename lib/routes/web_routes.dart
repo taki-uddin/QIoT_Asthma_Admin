@@ -4,6 +4,7 @@ import 'package:qiot_admin/main.dart';
 import 'package:qiot_admin/screens/dashboard_screen/dashboard_screen.dart';
 import 'package:qiot_admin/screens/authentication_screens/signin_screen.dart';
 import 'package:qiot_admin/screens/user_details/user_details.dart';
+import 'package:qiot_admin/widgets/auth_guard.dart';
 
 void defineRoutes(FluroRouter router) {
   router.define(
@@ -25,9 +26,11 @@ void defineRoutes(FluroRouter router) {
             initialTab = args['initialTab'] as int;
           }
         }
-        return DashboardScreen(
-          router: router,
-          initialTab: initialTab,
+        return AuthGuard(
+          child: DashboardScreen(
+            router: router,
+            initialTab: initialTab,
+          ),
         );
       },
     ),
@@ -39,11 +42,12 @@ void defineRoutes(FluroRouter router) {
         final String? userId = params['id']?.first;
         logger.d('userId: $userId');
         if (userId == null) {
-          // Handle the case where userId is null
-          return const SigninScreen(); // or any other fallback screen
+          return const SigninScreen();
         }
-        return UserDetails(
-          userId: userId,
+        return AuthGuard(
+          child: UserDetails(
+            userId: userId,
+          ),
         );
       },
     ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:qiot_admin/helpers/session_storage_helpers.dart';
 import 'package:qiot_admin/main.dart';
+import 'package:qiot_admin/services/auth_session.dart';
 import 'package:qiot_admin/services/api/authentication.dart';
 
 class SigninScreen extends StatefulWidget {
@@ -21,11 +22,17 @@ class _SigninScreenState extends State<SigninScreen> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     setState(() {
-      deviceType = "web";
+      deviceType = 'web';
     });
+    _redirectIfAlreadySignedIn();
+  }
+
+  Future<void> _redirectIfAlreadySignedIn() async {
+    if (!await AuthSession.ensureValidSession()) return;
+    if (!mounted) return;
+    Navigator.pushReplacementNamed(context, '/dashboard');
   }
 
   void onSignIn() async {

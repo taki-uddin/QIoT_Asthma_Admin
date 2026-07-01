@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:html' as html;
 import 'package:qiot_admin/helpers/session_storage_helpers.dart';
-import 'package:qiot_admin/services/api/authentication.dart';
 import 'package:qiot_admin/main.dart';
+import 'package:qiot_admin/services/auth_session.dart';
 
 class TokenRefreshService {
   static final TokenRefreshService _instance = TokenRefreshService._internal();
@@ -17,60 +17,47 @@ class TokenRefreshService {
   TokenRefreshService._internal();
 
   void initialize(String? deviceToken, String deviceType) {
-    print('device token : ${deviceToken}');
-    print('device type : ${deviceType}');
-
     _deviceToken = deviceToken;
     _deviceType = deviceType;
-    _timer = Timer.periodic(const Duration(minutes: 45), (timer) async {
+    _timer = Timer.periodic(const Duration(minutes: 45), (_) {
       startTokenRefreshTimer();
     });
     _setupVisibilityChangeListener();
+    _setupCrossTabLogoutListener();
   }
 
   void startTokenRefreshTimer() async {
-    _timer?.cancel();
-    await _refreshToken();
+    await _refreshTokenIfNeeded();
   }
 
-  Future<void> _refreshToken() async {
-    if (_deviceType == null) {
-      logger.d('Token refresh skipped: insufficient data.');
+  Future<void> _refreshTokenIfNeeded() async {
+    if (_deviceType == null) return;
+    if (!await AuthSession.hasStoredCredentials()) return;
+
+    final accessToken = await SessionStorageHelpers.getStorage('accessToken');
+    if (accessToken != null && !AuthSession.isAccessTokenExpired(accessToken)) {
       return;
     }
-    String? accessToken = await SessionStorageHelpers.getStorage('accessToken');
-    String? refreshToken =
-        await SessionStorageHelpers.getStorage('refreshToken');
-  
 
-    try {
-      final response = await Authentication().refreshToken(
-        accessToken!,
-        refreshToken!,
-        _deviceToken,
-        _deviceType!,
-      );
-      final jsonResponse = response;
-      if (jsonResponse['data']['status'] == 200) {
-        final newAccessToken = jsonResponse['data']['accessToken'];
-        final newRefreshToken = jsonResponse['data']['refreshToken'];
-        _updateTokens(newAccessToken, newRefreshToken);
-      }
-    } catch (e) {
-      logger.d('Failed to refresh : $e');
+    final refreshed = await AuthSession.tryRefreshToken();
+    if (!refreshed) {
+      await AuthSession.handleUnauthorized();
     }
-  }
-
-  void _updateTokens(String newAccessToken, String newRefreshToken) {
-    SessionStorageHelpers.setStorage('accessToken', newAccessToken);
-    SessionStorageHelpers.setStorage('refreshToken', newRefreshToken);
   }
 
   void _setupVisibilityChangeListener() {
-    html.document.onVisibilityChange.listen((event) {
+    html.document.onVisibilityChange.listen((_) {
       if (html.document.visibilityState == 'visible') {
-        logger.d('App is visible again');
-        startTokenRefreshTimer(); // Restart timer when app becomes visible
+        logger.d('App visible — validating session');
+        startTokenRefreshTimer();
+      }
+    });
+  }
+
+  void _setupCrossTabLogoutListener() {
+    html.window.onStorage.listen((event) {
+      if (event.key == 'loginState' && (event.newValue == null || event.newValue!.isEmpty)) {
+        AuthSession.redirectToLogin();
       }
     });
   }

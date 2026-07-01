@@ -15,10 +15,8 @@ class _AddAdultPatientScreenState extends State<AddAdultPatientScreen> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
   final _baselineController = TextEditingController();
   final _gpController = TextEditingController();
-  bool _obscurePassword = true;
   bool _isSubmitting = false;
 
   @override
@@ -26,7 +24,6 @@ class _AddAdultPatientScreenState extends State<AddAdultPatientScreen> {
     _firstNameController.dispose();
     _lastNameController.dispose();
     _emailController.dispose();
-    _passwordController.dispose();
     _baselineController.dispose();
     _gpController.dispose();
     super.dispose();
@@ -41,7 +38,6 @@ class _AddAdultPatientScreenState extends State<AddAdultPatientScreen> {
         'firstName': _firstNameController.text.trim(),
         'lastName': _lastNameController.text.trim(),
         'email': _emailController.text.trim(),
-        'password': _passwordController.text,
         if (_baselineController.text.trim().isNotEmpty)
           'baseLineScore': int.tryParse(_baselineController.text.trim()) ?? 0,
         if (_gpController.text.trim().isNotEmpty)
@@ -52,12 +48,16 @@ class _AddAdultPatientScreenState extends State<AddAdultPatientScreen> {
 
       if (response['status'] == 201) {
         final payload = response['payload'] as Map<String, dynamic>?;
+        final emailSent = payload?['setupEmailSent'] == true;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Patient ${payload?['firstName'] ?? ''} ${payload?['lastName'] ?? ''} created successfully.',
+              emailSent
+                  ? 'Patient ${payload?['firstName'] ?? ''} ${payload?['lastName'] ?? ''} created. Setup email sent to ${payload?['email'] ?? 'patient'}.'
+                  : 'Patient created, but the setup email could not be sent. Ask them to use Forgot Password in the app.',
             ),
-            backgroundColor: WebColors.okGreen,
+            backgroundColor:
+                emailSent ? WebColors.okGreen : WebColors.errorRed,
           ),
         );
         Navigator.pop(context);
@@ -123,10 +123,11 @@ class _AddAdultPatientScreenState extends State<AddAdultPatientScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Account will be enabled immediately. The patient can sign in with this email and password.',
+                        'The patient will receive an email with instructions to set their password in the QIoT app (Forgot Password → verification code → choose password).',
                         style: GoogleFonts.manrope(
                           color: WebColors.primaryGreyText,
                           fontSize: 14,
+                          height: 1.4,
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -151,28 +152,6 @@ class _AddAdultPatientScreenState extends State<AddAdultPatientScreen> {
                         validator: (v) {
                           if (v == null || v.trim().isEmpty) return 'Required';
                           if (!v.contains('@')) return 'Enter a valid email';
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      _field(
-                        controller: _passwordController,
-                        label: 'Password',
-                        obscure: _obscurePassword,
-                        suffix: IconButton(
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                          ),
-                          onPressed: () => setState(
-                            () => _obscurePassword = !_obscurePassword,
-                          ),
-                        ),
-                        validator: (v) {
-                          if (v == null || v.length < 6) {
-                            return 'At least 6 characters';
-                          }
                           return null;
                         },
                       ),
@@ -227,19 +206,15 @@ class _AddAdultPatientScreenState extends State<AddAdultPatientScreen> {
     required TextEditingController controller,
     required String label,
     TextInputType? keyboardType,
-    bool obscure = false,
-    Widget? suffix,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
-      obscureText: obscure,
       validator: validator,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-        suffixIcon: suffix,
       ),
     );
   }

@@ -7,9 +7,13 @@ import 'package:qiot_admin/constants/api_constants.dart';
 import 'dart:html' as html;
 import 'package:qiot_admin/helpers/session_storage_helpers.dart';
 import 'package:qiot_admin/main.dart';
-import 'package:qiot_admin/services/api/authentication.dart';
+import 'package:qiot_admin/services/auth_session.dart';
 
 class DashboardUsersData {
+  static Future<void> _rejectIfUnauthorized(int statusCode) async {
+    await AuthSession.rejectIfUnauthorized(statusCode);
+  }
+
   static Future<Map<String, dynamic>?> getFlaggedUsers() async {
     var headers = {
       'Authorization':
@@ -34,6 +38,7 @@ class DashboardUsersData {
           return null;
         }
       } else {
+        await _rejectIfUnauthorized(response.statusCode);
         logger.d("error: ${response.reasonPhrase}");
         return null;
       }
@@ -71,8 +76,8 @@ class DashboardUsersData {
           return null;
         }
       } else {
+        await _rejectIfUnauthorized(response.statusCode);
         logger.d("error: ${response.reasonPhrase}");
-        Authentication.signOut();
         return null;
       }
     } catch (e) {
@@ -97,6 +102,7 @@ class DashboardUsersData {
       if (response.statusCode == 200 && response.body.isNotEmpty) {
         return json.decode(response.body) as Map<String, dynamic>;
       }
+      await _rejectIfUnauthorized(response.statusCode);
       logger.d('Child health score error: ${response.statusCode}');
       return null;
     } catch (e) {
@@ -155,6 +161,7 @@ class DashboardUsersData {
           return null;
         }
       } else {
+        await _rejectIfUnauthorized(response.statusCode);
         logger.d("error: ${response.reasonPhrase}");
         return null;
       }
@@ -197,6 +204,7 @@ class DashboardUsersData {
           return null;
         }
       } else {
+        await _rejectIfUnauthorized(response.statusCode);
         logger.d("error: ${response.reasonPhrase}");
         return null;
       }
@@ -239,6 +247,7 @@ class DashboardUsersData {
           return null;
         }
       } else {
+        await _rejectIfUnauthorized(response.statusCode);
         logger.d("error: ${response.reasonPhrase}");
         return null;
       }
@@ -301,6 +310,7 @@ class DashboardUsersData {
           },
         );
       } else {
+        await _rejectIfUnauthorized(response.statusCode);
         logger.d("error: ${response.reasonPhrase}");
         return null;
       }
@@ -364,6 +374,7 @@ class DashboardUsersData {
         );
       } else {
         print('eror not found the value');
+        await _rejectIfUnauthorized(response.statusCode);
         logger.d("error: ${response.reasonPhrase}");
         return null;
       }
@@ -402,6 +413,7 @@ class DashboardUsersData {
           return null;
         }
       } else {
+        await _rejectIfUnauthorized(response.statusCode);
         logger.d("error: ${response.reasonPhrase}");
         return null;
       }
@@ -465,6 +477,7 @@ class DashboardUsersData {
         );
       } else {
         print('eror not found the value');
+        await _rejectIfUnauthorized(response.statusCode);
         logger.d("error: ${response.reasonPhrase}");
         return null;
       }
@@ -528,6 +541,7 @@ class DashboardUsersData {
         );
       } else {
         print('eror not found the value');
+        await _rejectIfUnauthorized(response.statusCode);
         logger.d("error: ${response.reasonPhrase}");
         return null;
       }
@@ -566,6 +580,7 @@ class DashboardUsersData {
           return null;
         }
       } else {
+        await _rejectIfUnauthorized(response.statusCode);
         logger.d("error: ${response.reasonPhrase}");
         return null;
       }
@@ -604,6 +619,7 @@ class DashboardUsersData {
           return null;
         }
       } else {
+        await _rejectIfUnauthorized(response.statusCode);
         logger.d("error: ${response.reasonPhrase}");
         return null;
       }
@@ -668,6 +684,7 @@ class DashboardUsersData {
         );
       } else {
         print('eror not found the value');
+        await _rejectIfUnauthorized(response.statusCode);
         logger.d("error: ${response.reasonPhrase}");
         return null;
       }
@@ -709,6 +726,7 @@ class DashboardUsersData {
           return null;
         }
       } else {
+        await _rejectIfUnauthorized(response.statusCode);
         logger.d("error: ${response.reasonPhrase}");
         return null;
       }
@@ -772,6 +790,7 @@ class DashboardUsersData {
         );
       } else {
         print('eror not found the value');
+        await _rejectIfUnauthorized(response.statusCode);
         logger.d("error: ${response.reasonPhrase}");
         return null;
       }
@@ -827,6 +846,7 @@ class DashboardUsersData {
           return null;
         }
       } else {
+        await _rejectIfUnauthorized(response.statusCode);
         logger.d("error: ${response.reasonPhrase}");
         return null;
       }
@@ -962,8 +982,8 @@ class DashboardUsersData {
           return null;
         }
       } else {
+        await _rejectIfUnauthorized(response.statusCode);
         logger.d("error: ${response.reasonPhrase}");
-        Authentication.signOut();
         return null;
       }
     } catch (e) {
@@ -985,6 +1005,7 @@ class DashboardUsersData {
       body: json.encode(body),
     );
     final decoded = json.decode(response.body) as Map<String, dynamic>;
+    await _rejectIfUnauthorized(response.statusCode);
     return {...decoded, 'httpStatus': response.statusCode};
   }
 
@@ -1002,6 +1023,7 @@ class DashboardUsersData {
       body: json.encode(childData),
     );
     final decoded = json.decode(response.body) as Map<String, dynamic>;
+    await _rejectIfUnauthorized(response.statusCode);
     return {...decoded, 'httpStatus': response.statusCode};
   }
 

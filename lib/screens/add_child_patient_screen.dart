@@ -22,14 +22,12 @@ class _AddChildPatientScreenState extends State<AddChildPatientScreen> {
   final _guardianFirstName = TextEditingController();
   final _guardianLastName = TextEditingController();
   final _guardianEmail = TextEditingController();
-  final _guardianPassword = TextEditingController();
 
   final _childFirstName = TextEditingController();
   final _childLastName = TextEditingController();
   final _childBaseline = TextEditingController();
   final _childInhaler = TextEditingController();
   String? _ageRange;
-  bool _obscureGuardianPassword = true;
 
   static const _ageRangeOptions = ['5-10', '11-17'];
 
@@ -44,7 +42,6 @@ class _AddChildPatientScreenState extends State<AddChildPatientScreen> {
     _guardianFirstName.dispose();
     _guardianLastName.dispose();
     _guardianEmail.dispose();
-    _guardianPassword.dispose();
     _childFirstName.dispose();
     _childLastName.dispose();
     _childBaseline.dispose();
@@ -76,9 +73,8 @@ class _AddChildPatientScreenState extends State<AddChildPatientScreen> {
     if (_createNewGuardian) {
       if (_guardianFirstName.text.trim().isEmpty ||
           _guardianLastName.text.trim().isEmpty ||
-          _guardianEmail.text.trim().isEmpty ||
-          _guardianPassword.text.length < 6) {
-        _showError('Please complete all guardian fields (password min 6 chars).');
+          _guardianEmail.text.trim().isEmpty) {
+        _showError('Please complete all guardian fields.');
         return false;
       }
       if (!_guardianEmail.text.contains('@')) {
@@ -122,7 +118,6 @@ class _AddChildPatientScreenState extends State<AddChildPatientScreen> {
           'firstName': _guardianFirstName.text.trim(),
           'lastName': _guardianLastName.text.trim(),
           'email': _guardianEmail.text.trim(),
-          'password': _guardianPassword.text,
         });
         if (guardianResponse['status'] != 201) {
           if (!mounted) return;
@@ -131,6 +126,14 @@ class _AddChildPatientScreenState extends State<AddChildPatientScreen> {
                 'Failed to create guardian account',
           );
           return;
+        }
+        final guardianPayload =
+            guardianResponse['payload'] as Map<String, dynamic>?;
+        if (guardianPayload?['setupEmailSent'] != true) {
+          if (!mounted) return;
+          _showError(
+            'Guardian account created, but setup email failed. They can use Forgot Password in the app.',
+          );
         }
         parentId =
             guardianResponse['payload']['_id']?.toString() ?? '';
@@ -381,20 +384,12 @@ class _AddChildPatientScreenState extends State<AddChildPatientScreen> {
             'Guardian email',
             keyboardType: TextInputType.emailAddress,
           ),
-          const SizedBox(height: 12),
-          _textField(
-            _guardianPassword,
-            'Guardian password',
-            obscure: _obscureGuardianPassword,
-            suffix: IconButton(
-              icon: Icon(
-                _obscureGuardianPassword
-                    ? Icons.visibility_off
-                    : Icons.visibility,
-              ),
-              onPressed: () => setState(
-                () => _obscureGuardianPassword = !_obscureGuardianPassword,
-              ),
+          const SizedBox(height: 8),
+          Text(
+            'A setup email will be sent so the guardian can choose their password in the QIoT app.',
+            style: GoogleFonts.manrope(
+              color: WebColors.primaryGreyText,
+              fontSize: 13,
             ),
           ),
         ],
